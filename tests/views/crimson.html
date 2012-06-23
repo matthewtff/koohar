@@ -1,0 +1,40 @@
+<html>
+	<head>
+		<title>www.crimson.org</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<script language="JavaScript" type="text/javascript" src="/js/crimson/crimson_main.js" />
+		<script language="JavaScript" type="text/javascript" src="/js/crimson/routines.js" />
+		<script language="JavaScript" type="text/javascript" src="/js/crimson/monsters.js" />
+		<script language="JavaScript" type="text/javascript" src="/js/crimson/bullets.js" />
+		<script language="JavaScript" type="text/javascript" src="/js/crimson/weapons.js" />
+		<script language="JavaScript" type="text/javascript" src="/js/crimson/items.js" />
+		<script language="JavaScript" type="text/javascript" src="/js/crimson/objects.js" />
+		<script language="JavaScript" type="text/javascript" src="/js/crimson/handlers.js" />
+		<script language="JavaScript" type="text/javascript" src="/js/crimson/music.js" />
+		<script language="JavaScript" type="text/javascript" src="/js/crimson/perks.js" />
+		<script language="JavaScript" type="text/javascript" src="/js/crimson/time_manager.js" />
+		<style>
+			a {
+			  color: #00B7FF;
+			}
+		</style>
+	</head>
+	<body onload="ONLOAD();" style="margin:0px;">
+		<canvas id="2dcanvas" />
+		<div id="menu_div" style="display:none; left:150px; top:100px; position:absolute; color:white; width:300;">
+			<p>
+				<span>Sound</span>
+				<input id="sound_enable" type="checkbox" onchange="muteSound();" />
+			</p>
+			<p>
+				<span>Volume</span>
+				<input id="theme_volume" type="range" onchange="changeThemeVolume();" value="15" max="100" min="1" style="float: right;" />
+			</p>
+			<p>
+				<span>Name</span>
+				<input id="player_login" type="text" onkeyup="main_hero.nick = document.getElementById('player_login').value" value="player" style="float: right;" />
+			</p>
+		</div>
+		<div id="perk_div" style="display:none; left:150px; top:100px; position:absolute; color:white; width:300;" />
+	</body>
+</html>

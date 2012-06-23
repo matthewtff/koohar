@@ -1,0 +1,20 @@
+body {
+	background-color:#000;
+	color:#fff;
+}
+.stable tbody tr.row0 {
+	background-color:#f0f0f0;
+}
+.stable tbody tr.row1 {
+	background-color:#f8f8f8;
+}
+.stable tbody tr:hover {
+	background-color:#c4c4c4;
+}
+.stable thead tr {
+	background-color:#383637;
+	color:white;
+}
+.stable {
+	display:none;
+}
