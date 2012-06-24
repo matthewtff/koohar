@@ -6,8 +6,9 @@ using namespace koohar;
 using namespace koohar::webui;
 using namespace std;
 
-IndexPage::IndexPage (koohar::Request& Req, koohar::Response& Res, const std::string& FileName) : WebPage(Req, Res, FileName),
-	_login_box(Req, this)
+IndexPage::IndexPage (koohar::Request& Req, koohar::Response& Res,
+	const std::string& FileName) : WebPage(Req, Res, FileName),
+	m_login_box(Req, this)
 {
 	load();
 }
@@ -22,11 +23,11 @@ void IndexPage::load()
 
 void IndexPage::get()
 {
-	_login_box.get();
+	m_login_box.get();
 }
 
 void IndexPage::post()
 {
-	_login_box.post();
+	m_login_box.post();
 }
 

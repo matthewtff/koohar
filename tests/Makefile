@@ -10,7 +10,6 @@ INC=-I$(INCPATH)
 all: tests
 
 tests: main.o index.o loginbox.o
-#	$(CC) -g -ggdb $(WARNINGS) -L$(LIBPATH) -l$(LIBNAME) main.o index.o loginbox.o -o koohar
 	$(CC) -g -ggdb $(WARNINGS) main.o index.o loginbox.o -o koohar -L$(LIBPATH) -l$(LIBNAME) -lpthread -I$(INCPATH)
 
 main.o: main.cc index.hh

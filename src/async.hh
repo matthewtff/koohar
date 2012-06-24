@@ -23,13 +23,13 @@ namespace koohar {
 
 #ifdef _WIN32
 
-#define AsyncHandle HANDLE
-#define AsyncKey DWORD
+typedef HANDLE AsyncHandle;
+typedef DWORD AsyncKey;
 
 #else /* _WIN32 */
 
-#define AsyncHandle int
-#define AsyncKey int
+typedef int AsyncHandle;
+typedef int AsyncKey;
 
 #endif /* _WIN32 */
 

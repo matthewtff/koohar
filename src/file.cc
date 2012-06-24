@@ -14,7 +14,9 @@
 
 #include "file.hh"
 
+#ifdef _DEBUG
 #include <iostream>
+#endif /* _DEBUG */
 
 namespace koohar {
 

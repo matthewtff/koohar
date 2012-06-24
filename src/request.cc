@@ -19,6 +19,8 @@
 
 namespace koohar {
 
+// Next 2 functions were brought from http://www.geekhideout.com/urlcode.shtml
+
 /* Converts a hex character to its integer value */
 char from_hex(char ch) {
 	return isdigit(ch) ? ch - '0' : tolower(ch) - 'a' + 10;
@@ -26,8 +28,9 @@ char from_hex(char ch) {
 
 /* Returns a url-decoded version of str */
 /* IMPORTANT: be sure to free() the returned string after use */
-char *url_decode(char *str) {
-	char *pstr = str, *buf = static_cast<char*>(malloc(strlen(str) + 1)), *pbuf = buf;
+char *url_decode(const char *str) {
+	const char *pstr = str;
+	char *buf = static_cast<char*>(malloc(strlen(str) + 1)), *pbuf = buf;
 	while (*pstr) {
 		if (*pstr == '%') {
 			if (pstr[1] && pstr[2]) {
@@ -61,7 +64,7 @@ void Request::method (const std::string& NewMethod)
 void Request::uri (const std::string& NewUri)
 {
 	m_uri = NewUri;
-	char* decoded_uri = url_decode(const_cast<char*>(m_uri.c_str()));
+	char* decoded_uri = url_decode(m_uri.c_str());
 	m_uri = decoded_uri;
 	free(decoded_uri);
 	size_t url_start = m_uri.find('/');
@@ -75,7 +78,7 @@ void Request::uri (const std::string& NewUri)
 
 void Request::parseUri (const std::string& SomeUri, const char Sep, const char Eq)
 {
-	char* decoded_uri = url_decode(const_cast<char*>(SomeUri.c_str()));
+	char* decoded_uri = url_decode(SomeUri.c_str());
 	std::string temp_uri(decoded_uri);
 	free(decoded_uri);
 	size_t query_start = temp_uri.find('?');

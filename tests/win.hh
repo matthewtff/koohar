@@ -4,8 +4,9 @@
 #ifdef _WIN32
 
 #include <winsock2.h>
+
 #define HandlerRet BOOL WINAPI
-#define HandlerGet DWORD
+typedef DWORD HandlerGet;
 
 void setHandler(int Add, PHANDLER_ROUTINE Routine)
 {
@@ -16,9 +17,12 @@ void setHandler(int Add, PHANDLER_ROUTINE Routine)
 
 #include <signal.h>
 
-#define HandlerRet void
-#define HandlerGet int
-#define CTRL_C_EVENT SIGINT
+typedef void HandlerRet;
+typedef int HandlerGet;
+
+enum {
+	CTRL_C_EVENT = SIGINT
+};
 
 void setHandler(int Sig, HandlerRet(* Routine)(HandlerGet))
 {

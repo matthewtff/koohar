@@ -1,3 +1,5 @@
+#include "async.hh"
+
 #ifdef _WIN32
 
 #else /* _WIN32 */
@@ -6,8 +8,6 @@
 #include <cstring>
 
 #endif /* _WIN32 */
-
-#include "async.hh"
 
 #ifdef _DEBUG
 #include <iostream>

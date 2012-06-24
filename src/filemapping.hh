@@ -1,5 +1,5 @@
-#ifndef _koohar_filemapping_hh
-#define _koohar_filemapping_hh
+#ifndef koohar_filemapping_hh
+#define koohar_filemapping_hh
 
 #include "file.hh"
 
@@ -19,6 +19,7 @@ public:
 	~FileMapping ();
 	char* map (const size_t Size, const size_t offset);
 	void unMap ();
+
 private:
 	FileHandle m_file;
 	size_t m_page_size;
@@ -26,6 +27,7 @@ private:
 	size_t m_size;
 	char* m_address;
 	bool m_mapped;
+
 #ifdef _WIN32
 
 	HANDLE m_file_map;
@@ -35,4 +37,4 @@ private:
 
 }; // namespace koohar
 
-#endif // _koohar_filemapping_hh
+#endif // koohar_filemapping_hh

@@ -69,6 +69,8 @@ void Response::end(const void* Buffer, const off_t BufferSize)
 {
 	if (Buffer && BufferSize)
 		body(Buffer, BufferSize);
+	else if (m_headers_allowed)
+		sendHeaders();
 	m_sender.close(m_socket.fd());
 }
 

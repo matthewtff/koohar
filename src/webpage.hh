@@ -11,7 +11,6 @@
 
 namespace koohar {
 
-// : Map<SearchRule, ObjPtr>
 class WebPage : public std::map<std::string, webui::ObjectPtr > {
 public:
 	WebPage (Request& Req, Response& Res, const std::string& FileName);
@@ -43,7 +42,7 @@ private:
 	Response& m_res;
 	xml::Parser m_dom;
 	std::string m_file_name;
-	bool m_sent; // set true, if info already was somehow sent, and no need to send again.
+	bool m_sent; // set true, if you sent data already, and no need to send again.
 }; // class WebPage
 
 // These predicates are used to link xml:: and webui:: Objects

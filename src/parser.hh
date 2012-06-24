@@ -21,14 +21,8 @@ public:
 	void print(std::ostream& out) { m_xml.print(out, m_koohar_tag); out << std::endl; }
 	void printIntro(std::ostream& out) { out << m_xml.text(); m_xml.printIntro(out, m_koohar_tag); out << std::endl; }
 	void copy(Object& CopyTo) { m_xml.copy(CopyTo); }
-private:
-	Object m_xml;
-	char* m_mapped_file;
-	size_t m_offset;
-	size_t m_size;
-	std::string m_koohar_tag;
-	std::string m_koohar_path_prop_name;
 
+private:
 	bool readObject(Object& obj);
 	void readText(std::string& text);
 	bool readTag(std::string& tag, bool& tag_closed, bool& object_closed);
@@ -53,6 +47,15 @@ private:
 	
 	// Include other files to current
 	void parseIntro();
+
+private:
+	Object m_xml;
+	char* m_mapped_file;
+	size_t m_offset;
+	size_t m_size;
+	std::string m_koohar_tag;
+	std::string m_koohar_path_prop_name;
+
 }; // class Parser
 
 }; // namespace xml

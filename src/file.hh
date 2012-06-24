@@ -1,5 +1,5 @@
-#ifndef _koohar_file_hh
-#define _koohar_file_hh
+#ifndef koohar_file_hh
+#define koohar_file_hh
 
 #include <string>
 
@@ -53,16 +53,18 @@ public:
 	FileHandle fh () const { return m_file; }
 
 private:
+	void getInfo ();
+	void createTemp ();
+
+private:
 	FileHandle m_file;
 	std::string m_fname;
 	size_t m_size;
 	time_t m_time;
 	bool m_opened; // true if file is opened
 	
-	void getInfo ();
-	void createTemp ();
 }; // class File
 
 }; // namespace koohar
 
-#endif // _koohar_file_hh
+#endif // koohar_file_hh

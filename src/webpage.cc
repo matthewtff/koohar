@@ -1,6 +1,6 @@
-#include <sstream>
-
 #include "webpage.hh"
+
+#include <sstream>
 
 #ifdef _DEBUG
 #include <iostream>
@@ -31,7 +31,7 @@ void WebPage::render ()
 	const std::string& send_string = parsed_page.str();
 	m_res.end(send_string.c_str(), send_string.length());
 #ifdef _DEBUG
-	std::cout << "[WebPage::rebder] Sent end()" << std::endl;
+	std::cout << "[WebPage::render] Sent end()" << std::endl;
 #endif /* _DEBUG */
 }
 

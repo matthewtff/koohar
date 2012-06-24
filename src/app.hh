@@ -7,7 +7,7 @@
 
 #include <memory>
 
-// <memory> header support was implemented since VS 2012 RC,
+// <mutex> header support was implemented since VS 2012 RC,
 // so for now we still need boost.
 #ifdef _WIN32
 

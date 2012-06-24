@@ -1,6 +1,7 @@
 #include <iostream>
-#include <stdlib.h>
 #include <string>
+#include <cstdlib>
+
 
 #include <app.hh>
 #include <webpage.hh>
@@ -20,13 +21,7 @@ HandlerRet sigHandler (HandlerGet sig)
 
 void ServerLogic(koohar::Request& Req, koohar::Response &Res, void*)
 {
-	if (Req.contains("/crimson")) {
-		koohar::WebPage crimson_page(Req, Res, views_dir + "crimson.html"); // use of standart WebPage
-		crimson_page.render();
-	} else if (Req.contains("/monge")) {
-		koohar::WebPage monge_page(Req, Res, views_dir + "monge.html");
-		monge_page.render();
-	} else if (Req.contains("/")) {
+	if (Req.contains("/")) {
 		IndexPage index_page(Req, Res, views_dir + "./index.html");
 		index_page.render();
 	} else {
