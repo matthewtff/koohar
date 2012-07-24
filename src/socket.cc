@@ -75,12 +75,13 @@ Socket::Socket (const bool Async, const bool IPv4) :
 	init();
 }
 
-Socket::Socket (const SocketHandle Sock, const std::string& IP,
+Socket::Socket (const Handle Sock, const std::string& IP,
 	const std::string& Port, const bool Async, const bool IPv4) :
 	m_socket(Sock), m_ip(IP), m_port(Port), m_async(Async), m_ipv4(IPv4)
 {
 #ifndef _WIN32
 
+	// For now let it be blocking...
 	if (m_async)
 		setnonblocking(Sock);
 
@@ -111,8 +112,7 @@ void Socket::init()
 
 	if ((m_socket = ::socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 #ifdef _DEBUG
-		std::cerr << "Error creating socket" << std::endl;
-		std::cerr << strerror(errno) << std::endl;
+		std::cout << "Error creating socket:" << strerror(errno) << std::endl;
 #endif /* _DEBUG */
 		return;
 	}
@@ -130,30 +130,51 @@ bool Socket::listen (const std::string& Address, const int Port, const int BackL
 	m_port = port_str;
 
 	sockaddr_in sa;
-	size_t sockaddr_size = sizeof(sa);
-	memset(&sa, 0, sockaddr_size);
+	memset(&sa, 0, sizeof(sa));
 	sa.sin_family = AF_INET;
 	sa.sin_port = htons(Port);
 	sa.sin_addr.s_addr = INADDR_ANY;
 	if (bind(m_socket, reinterpret_cast<struct sockaddr*>(&sa), sizeof(sockaddr)) < 0) {
 #ifdef _DEBUG
-		std::cerr << "Error binding socket\n";
-		std::cerr << strerror(errno) << std::endl;
+		std::cout << "Error binding socket: " << strerror(errno) << std::endl;
 #endif /* DEBUG */
 		return false;
 	}
 	return ::listen(m_socket, BackLog) != -1;
 }
 
+bool Socket::connect (const std::string& Address, const int Port)
+{
+	m_ip = Address;
+	char port_str[6];
+	sprintf(port_str, "%d", Port);
+	m_port = port_str;
+
+	sockaddr_in sa;
+	memset(&sa, 0, sizeof(sa));
+	sa.sin_family = AF_INET;
+	sa.sin_addr.s_addr = inet_addr(m_ip.c_str());
+	sa.sin_port = htons(Port);
+	if (::connect(m_socket, reinterpret_cast<struct sockaddr*>(&sa),
+		sizeof(sa)) == SOCKET_ERROR)
+	{
+#ifdef _DEBUG
+		std::cout << "Error connecting to " << Address << " :"
+			<< strerror(errno) << std::endl;
+#endif /* _DEBUG */
+		return false;
+	}
+	return true;
+}
+
 Socket Socket::accept () const
 {
 	sockaddr addr;
 	socklen_t address_size = sizeof(addr);
-	SocketHandle accept_sock;
+	Handle accept_sock;
 	if ((accept_sock = ::accept(m_socket, &addr, &address_size)) < 0) { // TODO: also use exception
 #ifdef _DEBUG
-		std::cerr << "Error accepting socket" << std::endl;
-		std::cerr << strerror(errno) << std::endl;
+		std::cout << "Error accepting socket: " << strerror(errno) << std::endl;
 #endif /* _DEBUG */
 	}
 	// these options are also not important to be set, so no return value check.
@@ -203,7 +224,7 @@ void Socket::close () const
 #endif /* _WIN32 */
 }
 
-SocketErrorType Socket::getCh (char* Mem, const size_t Length, int &Readed)
+Socket::Error Socket::getCh (char* Mem, const size_t Length, int &Readed)
 {
 #ifdef _WIN32
 
@@ -218,13 +239,13 @@ SocketErrorType Socket::getCh (char* Mem, const size_t Length, int &Readed)
 	if (!ReadFile((HANDLE)m_socket, Mem, Length, &readed_data, NULL)) {
 		Readed = static_cast<int>(readed_data);
 		if (GetLastError() != ERROR_HANDLE_EOF)
-			return SOCK_AGAIN_ERROR;
+			return AgainError;
 #ifdef _DEBUG
 		char msg[2000];
 		FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), msg, 2000, NULL);
 		std::cerr << msg;
 #endif /* _DEBUG */
-		return SOCK_ERROR;
+		return PipeError;
 	}
 	Readed = static_cast<int>(readed_data);
 
@@ -235,13 +256,13 @@ SocketErrorType Socket::getCh (char* Mem, const size_t Length, int &Readed)
 	Readed = readed_data;
 	if (readed_data < 0) {
 		if (errno == EAGAIN)
-			return SOCK_AGAIN_ERROR;
+			return AgainError;
 		else
-			return SOCK_ERROR;
+			return PipeError;
 	}
 
 #endif /* _WIN32 */
-	return readed_data ? SOCK_NO_ERROR : SOCK_ERROR;
+	return readed_data ? NoError : PipeError;
 }
 
 }; // namespace koohar

@@ -12,9 +12,10 @@ namespace koohar {
 typedef std::map<std::string, std::string> StringMap;
 
 class Response {
-
 public:
 	typedef std::map<unsigned short, std::string> StateMap;
+
+	static StateMap States;
 
 public:
 	Response(Sender& sender); // Response is useless whitout Sender.
@@ -37,6 +38,8 @@ public:
 	 */
 	bool cookie (const std::string& CookieName, const std::string& CookieValue);
 
+	bool body (const std::string& String);
+
 	/**
 	 * Send some data. Can be called multiple times.
 	 */
@@ -48,10 +51,14 @@ public:
 	 */
 	bool sendFile(const char* FileName, const off_t Size, const off_t Offset);
 
+	void end (const std::string& String);
+
 	/**
 	 * Terminates connection to client.
 	 */
-	void end(const void* Buffer = NULL, const off_t BufferSize = 0);
+	void end(const void* Buffer, const off_t BufferSize);
+
+	void end();
 
 	/**
 	 * Sends redirecting header and 302 (Redirect) status. You stll can send
@@ -59,14 +66,15 @@ public:
 	 * forget to close connection using end().
 	 */
 	void redirect (const std::string& Url);
-	void clear(); // No idea...
+
+	/**
+	 * States are very often used, so no need to create(allocate) that much
+	 * memory every time response object created. Thats why static map is created.
+	 */
+	static StateMap initStates ();
+
 
 private:
-	Socket m_socket;
-	StringMap m_headers;
-	bool m_headers_allowed; // True, till any part of body is sent.
-	Sender& m_sender;
-
 	/**
 	 * body() and end() methods have some identical code, so it moved to
 	 * private method.
@@ -78,16 +86,14 @@ private:
 	 * appropriate value to m_headers_allowed variable.
 	 */
 	void sendHeaders();
+
+private:
+	Socket m_socket;
+	StringMap m_headers;
+	bool m_headers_allowed; // True, till any part of body is sent.
+	Sender& m_sender;
+
 }; // class Response
-
-/**
- * States are very often used, so no need to create(allocate) that much
- * memory every time response object created. Thats why static map is created.
- */
-bool initStates (Response::StateMap& state_map);
-
-static Response::StateMap States;
-static bool __dummy = initStates(States); // Created to call function once.
 
 }; // namespace koohar
 

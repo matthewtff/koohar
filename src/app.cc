@@ -10,23 +10,25 @@
 #include "file.hh"
 #include "thread.hh"
 
+#ifdef _DEBUG
 #include <iostream>
+#endif /* _DEBUG */
 
 using namespace std;
 
 namespace koohar {
 
-enum {COOKIE_LENGTH = 64};
+enum { CookieLength = 64};
 
 // This value is used to trunc send data if it is large
 // We don't want to map 4GB to data per file
-enum {MAX_STATIC_SEND = 16777216}; // 16 MB
+enum { MAX_STATIC_SEND = 16777216}; // 16 MB
 
 void generateCookieKey(std::string& PlaceTo)
 {
 	PlaceTo.erase();
-	for (size_t count = 0; count < COOKIE_LENGTH; ++count)
-		PlaceTo.append(1, static_cast<char>(62 + rand() % 60)); // ord(62) -> 'a'
+	for (size_t count = 0; count < CookieLength; ++count)
+		PlaceTo.append(1, static_cast<char>(62 + rand() % 60)); // ord(62)-'a'
 }
 
 ThreadReturnValue listening_thread(ThreadGetValue TInfo)
@@ -39,7 +41,7 @@ ThreadReturnValue listening_thread(ThreadGetValue TInfo)
 	
 	thread_info.m_thread_mutex.lock();
 	while (true) {
-		AsyncKey key = thread_info.m_async.get();
+		Async::Key key = thread_info.m_async.get();
 
 		thread_info.m_connect_mutex.lock();
 		ConnectMap::iterator conn_it = thread_info.m_connections.find(key);
@@ -59,20 +61,20 @@ ThreadReturnValue listening_thread(ThreadGetValue TInfo)
 			// let other threads work while we process the request
 			thread_info.m_thread_mutex.unlock();
 
-			if (!reqres->req.errorCode()) { // check if there were any errors
+			if (!reqres->req.isBad()) { // check if there were any errors
 				reqres->res.socket(reqres->req.socket());
-				if (!thread_info.m_app.transferStatic(reqres->req, reqres->res)) {
-					// It is not static content
 
-					std::string sess_id = reqres->req.cookie(thread_info.m_app.cookieName());
-					if (sess_id.empty()) {
-						generateCookieKey(sess_id);
-						reqres->res.cookie(thread_info.m_app.cookieName(), sess_id);
-					}
-					reqres->req.session( &(thread_info.m_app.session(sess_id)) );
-
-					thread_info.m_user_func(reqres->req, reqres->res, thread_info.m_user_struct); // so call user defined function
+				std::string sess_id = reqres->req.cookie(thread_info.m_app.cookieName());
+				if (sess_id.empty()) {
+					generateCookieKey(sess_id);
+					reqres->res.cookie(thread_info.m_app.cookieName(), sess_id);
 				}
+				reqres->req.session( &(thread_info.m_app.session(sess_id)) );
+
+				// If it is not static content : call user defined function.
+				if (!thread_info.m_app.transferStatic(reqres->req, reqres->res))
+					thread_info.m_user_func(reqres->req, reqres->res, thread_info.m_user_struct);
+
 			} else { // if was - send bad request
 				reqres->res.writeHead(reqres->req.errorCode());
 				reqres->res.end();
@@ -87,7 +89,7 @@ ThreadReturnValue listening_thread(ThreadGetValue TInfo)
 }
 
 App::App (const std::string& IP, const unsigned short Port,
-	const unsigned short ThreadCount) : m_server(IP, Port),
+	const unsigned short ThreadCount) : m_server(IP, Port), m_404_file(""),
 	m_thread_count(ThreadCount), m_cookie_name("koohar_cookie")
 {
 	srand(static_cast<unsigned int>(time(NULL)));
@@ -126,6 +128,8 @@ void App::config (const std::string& ConfName, const std::string& ConfValue)
 		return;
 	if (!ConfName.compare("static_dir")) {
 		m_static_dir = ConfValue;
+	} if (!ConfName.compare("404 file")) {
+		m_404_file = ConfValue;
 	} else if (!ConfName.compare("static")) {
 		m_static.push_back(ConfValue);
 		m_static.unique();
@@ -154,7 +158,6 @@ void App::listen (UserFunc UserCallFunction, void* UserStruct)
 	}
 
 	// Actually listening loop that adds all new connections to epoll
-
 	while (true) {
 		shared_ptr<ReqRes> reqres(new ReqRes(m_sender));
 		reqres->req.socket(m_server.accept());
@@ -178,7 +181,7 @@ void App::registerMime(const std::string& FileExt, const std::string& Mime)
 void App::cookieName(const std::string& CookieName)
 {
 	if (!CookieName.empty())
-		m_cookie_name.assign(CookieName);
+		m_cookie_name = CookieName;
 }
 
 bool App::transferStatic (Request& Req, Response& Res)
@@ -189,17 +192,24 @@ bool App::transferStatic (Request& Req, Response& Res)
 		if (!Req.corresponds(*anyStatic)) // We aren't interested in that.
 			continue;
 		std::string file_name(m_static_dir);
-		file_name.append(Req.url());
+		file_name.append(Req.path());
 		File static_file (file_name.c_str());
-		if (!static_file.open(READ_ONLY)) { // file not found or some other error ;)
+		bool vulnerability = (file_name.find("../") != file_name.npos)
+			|| (file_name[0] == '/');
+		if (vulnerability || !static_file.open(File::ReadOnly)) { // file not found or some other error ;)
 #ifdef _DEBUG
-			std::cout << "file not found : " << file_name << std::endl;
-			std::cout << "error: " << strerror(errno) << std::endl;
+			std::cerr << "file not found : " << file_name << std::endl;
+			std::cerr << "error: " << strerror(errno) << std::endl;
 #endif /* _DEBUG */
 			Res.writeHead(404);
-			// TODO: User should be allowed to set his own 404 page...
-			std::string not_found("<html><body><h1>kooher</h1><h2>Page not found</h2></body></html>");
-			Res.end(not_found.c_str(), not_found.length());
+			if (m_404_file.empty()) {
+				// TODO: User should be allowed to set his own 404 page...
+				std::string not_found("<html><body><h1>kooher</h1><h2>Page not found</h2></body></html>");
+				Res.end(not_found.c_str(), not_found.length());
+			} else {
+				Res.sendFile(m_404_file.c_str(), 0, 0);
+				Res.end();
+			}
 			return true;
 		}
 		//Res.header("Expires", Date().incHours(2).toString());

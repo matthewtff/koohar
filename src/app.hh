@@ -38,7 +38,7 @@ struct ReqRes {
 };
 
 typedef void (*UserFunc)(Request &Req, Response &Res, void* UserStruct);
-typedef std::map<AsyncKey, std::shared_ptr<ReqRes> > ConnectMap;
+typedef std::map<Async::Key, std::shared_ptr<ReqRes> > ConnectMap;
 
 //StringMap defined in request.hh
 typedef std::map<std::string, StringMap> SessionMap;
@@ -79,10 +79,12 @@ public:
 	StringMap& session (const std::string& SessionId) { return m_sessions[SessionId]; }
 	bool transferStatic(Request& Req, Response& Res);
 	void close() { m_server.stop(); }
+
 private:
 	Server m_server;
 	Sender m_sender;
 	std::string m_static_dir;
+	std::string m_404_file;
 	StringList m_static;
 	StringMap m_mime;
 	unsigned short m_thread_count;

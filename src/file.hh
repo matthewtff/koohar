@@ -15,34 +15,43 @@
 
 namespace koohar {
 
-#ifdef _WIN32
-
-enum {
-	READ_ONLY = GENERIC_READ,
-	WRITE_ONLY = GENERIC_WRITE,
-	READ_WRITE = (GENERIC_READ | GENERIC_WRITE)
-};
-
-typedef HANDLE FileHandle;
-
-#else /* _WIN32 */
-
-enum {
-	READ_ONLY = O_RDONLY,
-	WRITE_ONLY = O_WRONLY,
-	READ_WRITE = O_RDWR
-};
-
-typedef int FileHandle;
-
-#endif /* _WIN32 */
 
 class File {
 public:
+
+#ifdef _WIN32
+
+	enum AccessType {
+		ReadOnly = GENERIC_READ,
+		WriteOnly = GENERIC_WRITE,
+		ReadWrite = (GENERIC_READ | GENERIC_WRITE)
+	};
+
+	typedef HANDLE Handle;
+
+	#else /* _WIN32 */
+
+	enum AccessType {
+		ReadOnly = O_RDONLY,
+		WriteOnly = O_WRONLY,
+		ReadWrite = O_RDWR
+	};
+
+	typedef int Handle;
+
+#endif /* _WIN32 */
+
+
+	enum Error {
+		IOError = -1,
+	};
+
+public:
 	File ();
+	File (File::Handle Hndl);
 	File (const std::string& FileName);
 	~File ();
-	bool open (int Flags);
+	bool open (AccessType Mode);
 	void close ();
 	void remove ();
 	bool move (const std::string& NewFileName);
@@ -50,14 +59,18 @@ public:
 	int write (const void* Buffer, size_t Length);
 	size_t size () const { return m_size; }
 	time_t time () const { return m_time; }
-	FileHandle fh () const { return m_file; }
+	Handle fh () const { return m_file; }
+
+public:
+	static int read (Handle Hndl, void* Buffer, size_t Length);
+	static int write (Handle Hndl, const void* Buffer, size_t Length);
 
 private:
 	void getInfo ();
 	void createTemp ();
 
 private:
-	FileHandle m_file;
+	Handle m_file;
 	std::string m_fname;
 	size_t m_size;
 	time_t m_time;

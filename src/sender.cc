@@ -12,7 +12,7 @@
 
 namespace koohar {
 
-void clearMapNode (const std::pair<const SocketHandle, const SendData>& data)
+void clearMapNode (const std::pair<const Socket::Handle, const SendData>& data)
 {
 	if (data.second.m_type == SendData::Data)
 		delete []data.second.m_data;
@@ -20,7 +20,7 @@ void clearMapNode (const std::pair<const SocketHandle, const SendData>& data)
 		delete data.second.m_map;
 }
 
-int sendData (const SocketHandle Socket, const SendData& Data)
+int sendData (const Socket::Handle Socket, const SendData& Data)
 {
 	if (!Data.m_data || !Data.m_size || !Socket)
 		return -1;
@@ -73,7 +73,7 @@ ThreadReturnValue sender_thread (ThreadGetValue Info)
 {
 	Sender::ThreadInfo& info = *(reinterpret_cast<Sender::ThreadInfo*>(Info));
 	while (true) {
-		AsyncKey key = info.m_async.get();
+		Async::Key key = info.m_async.get();
 		if (!key)
 			continue;
 		info.m_map_mutex.lock();
@@ -88,7 +88,7 @@ ThreadReturnValue sender_thread (ThreadGetValue Info)
 						info.m_map.erase(it);
 						it = info.m_map.find(key);
 					} else { // Otherwise just pull socket back to epoll
-						info.m_async.append(it->first, false);
+						info.m_async.append(it->first, Async::Output);
 						break;
 					}
 				} else if (it->second.m_type == SendData::Close) {
@@ -122,7 +122,7 @@ Sender::~Sender ()
 	std::for_each(m_map.begin(), m_map.end(), clearMapNode);
 }
 
-bool Sender::send (const SocketHandle SomeSocket, const char* SomeData, const size_t SomeSize)
+bool Sender::send (const Socket::Handle SomeSocket, const char* SomeData, const size_t SomeSize)
 {
 	if (!SomeData || !SomeSize)
 		return false;
@@ -131,38 +131,40 @@ bool Sender::send (const SocketHandle SomeSocket, const char* SomeData, const si
 	m_map_mutex.lock();
 	m_map.insert(std::pair<int, SendData>(SomeSocket, SendData(PutData, SomeSize, SendData::Data, countEntries(SomeSocket), 0)));
 	m_map_mutex.unlock();
-	m_async.append(SomeSocket, false);
+	m_async.append(SomeSocket, Async::Output);
 	return true;
 }
 
-bool Sender::sendFile (const SocketHandle SomeSocket, const char* SomeFileName, const size_t SomeSize, const size_t SomeOffset)
+bool Sender::sendFile (const Socket::Handle SomeSocket, const char* SomeFileName, const size_t SomeSize, const size_t SomeOffset)
 {
 	if (!SomeFileName)
 		return false;
 	File static_file (SomeFileName);
-	if (!static_file.open(READ_ONLY))
+	if (!static_file.open(File::ReadOnly))
 		return false;
+	
+	size_t real_size = SomeSize ? SomeSize : static_file.size();
 	// try to map file : should be fastest
 	FileMapping* map = new FileMapping(static_file.fh());
-	char* mapped_file = map->map(SomeSize, SomeOffset);
+	char* mapped_file = map->map(real_size, SomeOffset);
 	m_map_mutex.lock();
-	m_map.insert(std::pair<int, SendData>(SomeSocket, SendData(mapped_file, SomeSize, SendData::File, countEntries(SomeSocket), map)));
+	m_map.insert(std::pair<int, SendData>(SomeSocket, SendData(mapped_file, real_size, SendData::File, countEntries(SomeSocket), map)));
 	m_map_mutex.unlock();
-	m_async.append(SomeSocket, false);
+	m_async.append(SomeSocket, Async::Output);
 	return true;
 }
 
-void Sender::close (const SocketHandle SomeSocket)
+void Sender::close (const Socket::Handle SomeSocket)
 {
 	m_map_mutex.lock();
 	m_map.insert(std::pair<int, SendData>(SomeSocket, SendData(0, 0, SendData::Close, countEntries(SomeSocket), 0)));
 	m_map_mutex.unlock();
-	m_async.append(SomeSocket, false);
+	m_async.append(SomeSocket, Async::Output);
 }
 
 // private methods
 
-size_t Sender::countEntries (const SocketHandle SomeSocket)
+size_t Sender::countEntries (const Socket::Handle SomeSocket)
 {
 	size_t ret = 0;
 	for (auto it = m_map.find(SomeSocket);

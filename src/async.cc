@@ -28,18 +28,18 @@ Async::Async(size_t ThreadNumber) : m_thread_number(ThreadNumber)
 #endif /* _WIN32 */
 }
 
-void Async::append(SocketHandle SH, const bool In)
+void Async::append(Socket::Handle SH, Type In)
 {
 	m_mutex.lock();
 #ifdef _WIN32
 
-	CreateIoCompletionPort((HANDLE)SH, m_async, SH, m_thread_number + 1);
+	CreateIoCompletionPort((Handle)SH, m_async, SH, m_thread_number + 1);
 	PostQueuedCompletionStatus(m_async, 0, SH, NULL);
 
 #else /* _WIN32 */
 
 	struct epoll_event ev;
-	ev.events = (In ? EPOLLIN : EPOLLOUT) | EPOLLET | EPOLLRDHUP;
+	ev.events = (In  == Input ? EPOLLIN : EPOLLOUT) | EPOLLET | EPOLLRDHUP;
 	ev.data.fd = SH;
 	if (epoll_ctl(m_async, EPOLL_CTL_ADD, SH, &ev) == -1) {
 #ifdef _DEBUG
@@ -52,9 +52,9 @@ void Async::append(SocketHandle SH, const bool In)
 	m_mutex.unlock();
 }
 
-AsyncKey Async::get (const int TimeOut)
+Async::Key Async::get (const int TimeOut)
 {
-	AsyncKey key = 0;
+	Key key = 0;
 #ifdef _WIN32
 
 	DWORD* transfered = new DWORD;

@@ -15,7 +15,7 @@ bool Parser::parse(const std::string& FileName)
 	if (FileName.empty())
 		return false;
 	File xml_file(FileName);
-	if (!xml_file.open(READ_ONLY)) {
+	if (!xml_file.open(File::ReadOnly)) {
 #ifdef _DEBUG
 		std::cerr << "[Parser::parse] error opening file " << FileName << std::endl;
 #endif /* _DEBUG */

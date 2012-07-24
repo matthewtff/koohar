@@ -1,8 +1,18 @@
 #include "filemapping.hh"
 
+#ifdef _WIN32
+
+#include <windows.h>
+
+#else /* _WIN32 */
+
+#include <sys/mman.h>
+
+#endif /* _WIN32 */
+
 namespace koohar {
 
-FileMapping::FileMapping (const FileHandle& FH, size_t PageSize) :
+FileMapping::FileMapping (const File::Handle& FH, size_t PageSize) :
 	m_file(FH), m_page_size(PageSize), m_address(0), m_mapped(false)
 {}
 

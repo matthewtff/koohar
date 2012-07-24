@@ -24,6 +24,7 @@ public:
 	std::string tag() const { return m_tag; }
 	std::string& set (const std::string& Prop);
 	bool appendChild(ObjectPtr Child);
+
 	// Execute predicate on every child
 	template<class Predicate> void everyChild(const Predicate& Pred)
 	{

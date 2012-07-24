@@ -25,6 +25,11 @@ File::File () : m_size(0), m_time(0), m_opened(false)
 	//createTemp();
 }
 
+File::File (File::Handle Hndl) : m_file(Hndl),
+	m_size(0), m_time(0), m_opened(true)
+{
+}
+
 File::File (const std::string& FileName) : m_fname(FileName), m_size(0),
 	m_time(0), m_opened(false)
 {
@@ -36,7 +41,7 @@ File::~File ()
 		close();
 }
 
-bool File::open (int Mode)
+bool File::open (AccessType Mode)
 {
 	if (m_opened)
 		return true;
@@ -52,7 +57,7 @@ bool File::open (int Mode)
 #endif /* _WIN32 */
 
 #ifdef _DEBUG
-		std::cerr << "Error opening file" << std::endl;
+		std::cerr << "Error opening file " << m_fname << std::endl;
 		std::cerr << strerror(errno) << std::endl;
 #endif /* _DEBUG */
 		return false;
@@ -127,50 +132,60 @@ bool File::move (const std::string& NewFileName)
 int File::read (void* Buffer, size_t Length)
 {
 	if (!m_opened)
-		return false;
-#ifdef _WIN32
-
-	DWORD return_value = 0;
-	if (!ReadFile(m_file, Buffer, static_cast<DWORD>(Length), &return_value, NULL)) {
-
-#else /* _WIN32 */
-
-	int return_value = 0;
-	return_value = ::read(m_file, Buffer, Length);
-	if (return_value == -1) {
-
-#endif /* _WIN32 */
-
-#ifdef _DEBUG
-		std::cerr << "Error reading file " << m_fname << std::endl;
-#endif /* _DEBUG */
-		return -1;
-	} else {
-		return static_cast<int>(return_value);
-	}
+		return IOError;
+	
+	return File::read(m_file, Buffer, Length);
 }
 
 int File::write (const void* Buffer, size_t Length)
 {
 	if (!m_opened)
-		return false;
+		return IOError;
+	
+	return File::write(m_file, Buffer, Length);
+}
+
+int File::read (File::Handle Hndl, void* Buffer, size_t Length)
+{
 #ifdef _WIN32
 
 	DWORD return_value = 0;
-	if (!WriteFile(m_file, Buffer, static_cast<DWORD>(Length), &return_value, NULL)) {
+	if (!ReadFile(Hndl, Buffer, static_cast<DWORD>(Length), &return_value, NULL)) {
 
 #else /* _WIN32 */
 
 	int return_value = 0;
-	return_value = ::write(m_file, Buffer, Length);
+	return_value = ::read(Hndl, Buffer, Length);
+	if (return_value == -1) {
+
+#endif /* _WIN32 */
+
+		return IOError;
+	} else {
+		return static_cast<int>(return_value);
+	}
+}
+
+
+int File::write (File::Handle Hndl, const void* Buffer, size_t Length)
+{
+#ifdef _WIN32
+
+	DWORD return_value = 0;
+	if (!WriteFile(Hndl, Buffer, static_cast<DWORD>(Length), &return_value, NULL)) {
+
+#else /* _WIN32 */
+
+	int return_value = 0;
+	return_value = ::write(Hndl, Buffer, Length);
 	if (return_value == -1) {
 
 #endif /* _WIN32 */
 
 #ifdef _DEBUG
-		std::cerr << "Error writing to file " << m_fname << std::endl;
+		std::cerr << "Error writing to file." << std::endl;
 #endif /* _DEBUG */
-		return -1;
+		return IOError;
 	} else {
 		return return_value;
 	}

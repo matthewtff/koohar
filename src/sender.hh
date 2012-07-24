@@ -53,7 +53,7 @@ struct SendData {
 	
 }; // struct SendData
 
-typedef std::multimap<SocketHandle, SendData> SenderMap;
+typedef std::multimap<Socket::Handle, SendData> SenderMap;
 
 /**
  *	Represents thread for asyncronious data sending.
@@ -61,7 +61,7 @@ typedef std::multimap<SocketHandle, SendData> SenderMap;
 class Sender {
 public:
 	
-	typedef struct ThreadInfo {
+	struct ThreadInfo {
 
 		ThreadInfo (SenderMap& map, Async& async, std::mutex& map_mutex) :
 			m_map(map), m_async(async), m_map_mutex(map_mutex) {}
@@ -69,13 +69,14 @@ public:
 		SenderMap& m_map;
 		Async& m_async;
 		std::mutex& m_map_mutex;
-	} ThreadInfo; // struct ThreadInfo
+	}; // struct ThreadInfo
 	
 	Sender ();
 	~Sender ();
-	bool send (const SocketHandle SomeSocket, const char* SomeData, const size_t SomeSize);
-	bool sendFile (const SocketHandle SomeSocket, const char* SomeFileName, const size_t SomeSize, const size_t SomeOffset);
-	void close (const SocketHandle SomeSocket);
+	bool send (const Socket::Handle SomeSocket, const char* SomeData, const size_t SomeSize);
+	bool sendFile (const Socket::Handle SomeSocket, const char* SomeFileName, const size_t SomeSize, const size_t SomeOffset);
+	void close (const Socket::Handle SomeSocket);
+
 private:
 	SenderMap m_map;
 	std::mutex m_map_mutex;
@@ -83,7 +84,7 @@ private:
 	ThreadHandle m_th;
 	//size_t m_page_size;
 	
-	size_t countEntries (const SocketHandle SomeSocket);
+	size_t countEntries (const Socket::Handle SomeSocket);
 }; // class Sender
 
 }; // namespace koohar

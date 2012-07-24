@@ -21,25 +21,33 @@ namespace std {
 
 namespace koohar {
 
+class Async {
+public:
+
 #ifdef _WIN32
 
-typedef HANDLE AsyncHandle;
-typedef DWORD AsyncKey;
+	typedef HANDLE Handle;
+	typedef DWORD Key;
 
 #else /* _WIN32 */
 
-typedef int AsyncHandle;
-typedef int AsyncKey;
+	typedef int Handle;
+	typedef int Key;
 
 #endif /* _WIN32 */
 
-class Async {
+	enum Type {
+		Input,
+		Output
+	};
+
 public:
 	Async (const size_t ThreadNumber = 1);
-	void append (const SocketHandle SH, const bool In = true);
-	AsyncKey get (const int TimeOut = -1);
+	void append (const Socket::Handle SH, Type In = Input);
+	Key get (const int TimeOut = -1);
+
 private:
-	AsyncHandle m_async;
+	Handle m_async;
 	size_t m_thread_number;
 	std::mutex m_mutex;
 }; // class Async
