@@ -48,7 +48,7 @@ bool File::open (AccessType Mode)
 #ifdef _WIN32
 
 	if ((m_file = CreateFileA(m_fname.c_str(), Mode, FILE_SHARE_READ, NULL,
-		OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL)) == INVALID_HANDLE_VALUE) {
+		OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) == INVALID_HANDLE_VALUE) {
 
 #else /* _WIN32 */
 
