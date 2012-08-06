@@ -1,3 +1,5 @@
+#include "app.hh"
+
 #include <cstdio>
 #include <errno.h>
 #include <cstring>
@@ -5,14 +7,13 @@
 #include <ctime>
 #include <vector>
 
-#include "app.hh"
 #include "date.hh"
 #include "file.hh"
 #include "thread.hh"
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
 #include <iostream>
-#endif /* _DEBUG */
+//#endif /* _DEBUG */
 
 using namespace std;
 
@@ -120,6 +121,7 @@ App::App (const std::string& IP, const unsigned short Port,
 	m_mime["mov"] = "video/quicktime";
 	m_mime[".js"] = "application/x-javascript";
 	m_mime["k3d"] = "video/x-matroska-3d"; // mk3d actually
+	m_mime["son"] = "application/json"; // json actually
 }
 
 void App::config (const std::string& ConfName, const std::string& ConfValue)
@@ -221,7 +223,7 @@ bool App::transferStatic (Request& Req, Response& Res)
 		Res.header("Server", "koohar.app x86 v0.01");
 #endif /* __LP64__ */
 
-		Res.header("Last-Modified", Date(static_file.time()).toString());
+		//Res.header("Last-Modified", Date(static_file.time()).toString());
 		Date hreader_since(Req.header("if-modified-since"));
 		if (hreader_since.time() != -1) // client sent 'If-Modified-Since' header, so check for it
 			if (hreader_since.time() >= static_file.time()) { // content did not change

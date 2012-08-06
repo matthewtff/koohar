@@ -13,6 +13,7 @@
 #endif /* _WIN32 */
 
 #include <errno.h>
+#include <unistd.h>
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
@@ -40,14 +41,14 @@ void destroySockets ()
 
 #ifdef _WIN32
 
-void close (SocketHandle sock)
+void close (Socket::Handle sock)
 {
 	closesocket(sock);
 }
 
 #else /* _WIN32 */
 
-void setnonblocking(const int Sock)
+void setnonblocking(Socket::Handle Sock)
 {
 	int opts;
 	opts = fcntl(Sock, F_GETFL);
@@ -80,11 +81,8 @@ Socket::Socket (const Handle Sock, const std::string& IP,
 	m_socket(Sock), m_ip(IP), m_port(Port), m_async(Async), m_ipv4(IPv4)
 {
 #ifndef _WIN32
-
-	// For now let it be blocking...
 	if (m_async)
 		setnonblocking(Sock);
-
 #endif /* !_WIN32 */
 }
 

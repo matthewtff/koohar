@@ -1,9 +1,7 @@
-#include <cstdlib>
-#include <cstdio>
-
 #include "date.hh"
 
-#include <iostream>
+#include <cstdlib>
+#include <cstdio>
 
 namespace koohar {
 

@@ -1,11 +1,11 @@
-CC=g++
-#CC=clang++
+#CC=g++
+CC=clang++
 
-CFLAGS=-c -std=c++0x -g -ggdb -fPIC -D_DEBUG
-#CFLAGS=-c -std=c++0x -O2 -fPIC
+#CFLAGS=-c -std=c++0x -g -ggdb -stdlib=libc++ -fPIC -D_DEBUG
+CFLAGS=-c -std=c++0x -O2 -stdlib=libc++ -fPIC
 
 WARNINGS=-Wall -Wextra -Woverloaded-virtual
-LIBS=-static -lpthread -lboost_regex
+LIBS=-lpthread
 LIBNAME=libkoohar.so
 MAJOR_VER=1
 MINOR_VER=0

@@ -3,8 +3,6 @@
 #include <cctype>
 #include <cstdlib>
 
-#include <iostream>
-
 namespace koohar {
 
 inline HttpParser::Method operator++ (HttpParser::Method& rs)
@@ -12,7 +10,7 @@ inline HttpParser::Method operator++ (HttpParser::Method& rs)
 	return rs = static_cast<HttpParser::Method>(rs + 1);
 }
 
-boost::regex HttpParser::m_cookie_regex
+std::regex HttpParser::m_cookie_regex
 	("([^=]+)=?([^;]*)(;)?[:space]?");
 
 HttpParser::StateCallback HttpParser::m_callbacks[] = {
@@ -27,7 +25,7 @@ HttpParser::StateCallback HttpParser::m_callbacks[] = {
 /**
  * Method token MUST be upper case.
  */
-const char* HttpParser::m_method_strings[] = {
+std::string HttpParser::m_method_strings[] = {
 	"OPTIONS",
 	"GET",
 	"HEAD",
@@ -50,6 +48,8 @@ bool HttpParser::update (const char* Data, unsigned int Size)
 			m_state = OnParseError;
 			return false; // Prevent buffer overflow.
 		}
+		if (m_state == OnComplete)
+			return true;
 		(this->*m_callbacks[m_state]) (Data[counter]);
 	}
 	return m_state != OnParseError;
@@ -77,7 +77,6 @@ void HttpParser::parseMethod (char ch)
 			if (m_token == m_method_strings[method]) {
 				m_method = method;
 				m_token.erase();
-				std::cout << "Method: " << m_method << std::endl;
 				return;
 			}	
 		}
@@ -94,13 +93,6 @@ void HttpParser::parseUri (char ch)
 		m_token.erase();
 		if (!parse(m_uri)) // bad uri.
 			m_state = OnParseError;
-		else {
-			std::cout << "Scheme: " << scheme() << std::endl;
-			std::cout << "Authority: " << authority() << std::endl;
-			std::cout << "Path: " << path() << std::endl;
-			std::cout << "Query: " << query() << std::endl;
-			std::cout << "Fragment: " << fragment() << std::endl;
-		}
 	} else
 		m_token.append(1, ch);
 }
@@ -140,12 +132,6 @@ void HttpParser::parseHttpVersion (char ch)
 				m_state = OnParseError;
 			break;
 		}
-
-		if (m_state != OnParseError) {
-			std::cout << "HTTP/" << m_version.m_major
-				<< "." << m_version.m_minor << std::endl;
-		}
-
 		m_token.erase();
 	} else if (ch != '\r')
 		m_token.append(1, ch);
@@ -154,7 +140,6 @@ void HttpParser::parseHttpVersion (char ch)
 void HttpParser::parseHeaderName (char ch)
 {
 	if (ch == '\n') {
-		std::cout << "Content-Length: " << m_content_length << std::endl;
 		m_state = m_content_length ? OnBody : OnComplete;
 		m_token.erase();
 	} else if (ch == ' ') {
@@ -196,14 +181,13 @@ void HttpParser::parseCookies (const std::string& CookieStr)
 		return;
 	std::string::const_iterator start = CookieStr.begin();
 	std::string::const_iterator end = CookieStr.end();
-	boost::match_results<std::string::const_iterator> what;
-	boost::match_flag_type flags = boost::match_default;
-	while (boost::regex_search(start, end, what, m_cookie_regex, flags))
+	std::match_results<std::string::const_iterator> what;
+	std::regex_constants::match_flag_type flags =
+		std::regex_constants::match_default;
+	while (std::regex_search(start, end, what, m_cookie_regex, flags))
 	{
 		std::string cookie_name (what[1].first, what[1].second);
 		std::string cookie_value (what[2].first, what[2].second);
-		std::cout << "Cookie Name: " << cookie_name << std::endl;
-		std::cout << "Cookie Value: " << cookie_value << std::endl;
 		m_cookies[cookie_name] = cookie_value;
 		start = what[0].second;
 	}

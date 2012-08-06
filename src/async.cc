@@ -39,7 +39,7 @@ void Async::append(Socket::Handle SH, Type In)
 #else /* _WIN32 */
 
 	struct epoll_event ev;
-	ev.events = (In  == Input ? EPOLLIN : EPOLLOUT) | EPOLLET | EPOLLRDHUP;
+	ev.events = (In  == Input ? EPOLLIN : EPOLLOUT) /*| EPOLLET*/ | EPOLLRDHUP;
 	ev.data.fd = SH;
 	if (epoll_ctl(m_async, EPOLL_CTL_ADD, SH, &ev) == -1) {
 #ifdef _DEBUG

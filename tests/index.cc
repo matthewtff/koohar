@@ -15,7 +15,7 @@ IndexPage::IndexPage (koohar::Request& Req, koohar::Response& Res,
 
 void IndexPage::load()
 {
-	if (!req().method().compare("POST"))
+	if (!req().method() == Request::Post)
 		post();
 	else
 		get();

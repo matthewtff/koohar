@@ -4,8 +4,6 @@
 #include <string>
 #include <ctime>
 
-#include <iostream>
-
 namespace koohar {
 
 // According to rfc2616 date in HTTP could be represented by any of these standarts:

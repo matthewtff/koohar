@@ -27,7 +27,8 @@ public:
 #ifdef _WIN32
 
 	typedef HANDLE Handle;
-	typedef DWORD Key;
+	//typedef DWORD Key;
+	typedef ULONG_PTR Key;
 
 #else /* _WIN32 */
 

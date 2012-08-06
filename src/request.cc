@@ -63,15 +63,11 @@ bool Request::receive ()
 	int readed = 0;
 	Socket::Error sock_err = m_socket.getCh(buf, sizeof(buf), readed);
 	switch (sock_err) {
-		case Socket::AgainError: std::cout << "AGAIN...\n"; return false;
+		case Socket::AgainError: return false;
 		case Socket::PipeError: return true;
 		default: // SOCK_NO_ERROR
 			break;
 	}
-#ifdef _DEBUG
-	buf[readed] = '\0';
-	std::cout << buf;
-#endif /* _DEBUG */
 	update(buf, readed); // HttpParser::Update
 	return isComplete(); // HttpParser::isComplete
 }

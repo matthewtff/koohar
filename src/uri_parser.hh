@@ -1,7 +1,10 @@
 #ifndef koohar_uri_parser_hh
 #define koohar_uri_parser_hh
 
-#include <boost/regex.hpp>
+#include <string>
+#include <map>
+
+#include <regex>
 
 namespace koohar {
 
@@ -33,8 +36,8 @@ private:
 	std::string decode (const std::string& Uri);
 
 private:
-	static boost::regex m_uri_regex;
-	static boost::regex m_query_regex;
+	static std::regex m_uri_regex;
+	static std::regex m_query_regex;
 	std::string m_scheme;
 	std::string m_authority;
 	std::string m_path;

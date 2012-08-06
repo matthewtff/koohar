@@ -10,7 +10,7 @@ INC=-I$(INCPATH)
 all: tests
 
 tests: main.o index.o loginbox.o
-	$(CC) -g -ggdb $(WARNINGS) main.o index.o loginbox.o -o koohar -L$(LIBPATH) -l$(LIBNAME) -lpthread -I$(INCPATH)
+	$(CC) -g -ggdb $(WARNINGS) $(INC) main.o index.o loginbox.o -lboost_regex -lpthread -L$(LIBPATH) -l$(LIBNAME) -o koohar
 
 main.o: main.cc index.hh
 	$(CC) $(WARNINGS) $(CFLAGS) $(INC) main.cc

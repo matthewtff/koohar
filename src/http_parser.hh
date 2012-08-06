@@ -1,8 +1,8 @@
 #ifndef koohar_http_parser_hh
 #define koohar_http_parser_hh
 
-#include <boost/regex.hpp>
 #include <string>
+#include <regex>
 
 #include "uri_parser.hh"
 
@@ -14,12 +14,12 @@ namespace koohar {
 class HttpParser : public UriParser {
 public:
 
-	typedef struct {
+	struct Version {
 		unsigned short int m_major;
 		unsigned short int m_minor;
-	} Version;
+	};
 
-	typedef enum {
+	enum Method {
 		Options,
 		Get,
 		Head,
@@ -29,15 +29,15 @@ public:
 		Trace,
 		Connect,
 		ExpressionMethod
-	} Method;
+	};
 
-	typedef enum {
+	enum Error {
 		BadMethod,
 		BadUri,
 		BadHttpVersion,
 		BadHeaders,
 		BadBody
-	} Error;
+	};
 
 public:
 	HttpParser();
@@ -70,7 +70,7 @@ private:
 
 	enum { MaxTokenSize = 4096 };
 
-	typedef enum {
+	enum State {
 		OnMethod,
 		OnUri,
 		OnHttpVersion,
@@ -79,13 +79,9 @@ private:
 		OnBody,
 		OnComplete,
 		OnParseError
-	} State;
+	};
 
 	typedef void (HttpParser::*StateCallback) (char ch);
-
-	static StateCallback m_callbacks[OnParseError];
-	static const char* m_method_strings[ExpressionMethod];
-	static boost::regex m_cookie_regex;
 
 	void parseMethod (char ch);
 	void parseUri (char ch);
@@ -97,6 +93,10 @@ private:
 	void parseCookies (const std::string& CookieStr);
 
 private:
+	static StateCallback m_callbacks[OnParseError];
+	static std::string m_method_strings[ExpressionMethod];
+	static std::regex m_cookie_regex;
+
 	State m_state;
 	std::string m_token;
 	std::string m_current_header;

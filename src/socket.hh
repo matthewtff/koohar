@@ -19,7 +19,7 @@ void destroySockets();
 
 #ifdef _WIN32
 
-void close (SocketHandle sock);
+void close (Socket::Handle sock);
 
 #else /* _WIN32 */
 

@@ -5,6 +5,8 @@
 #include <list>
 #include <string>
 
+#include <functional>
+
 #include <memory>
 
 // <mutex> header support was implemented since VS 2012 RC,

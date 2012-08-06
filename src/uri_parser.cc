@@ -4,10 +4,10 @@
 
 namespace koohar {
 
-boost::regex UriParser::m_uri_regex
+std::regex UriParser::m_uri_regex
 	("^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?");
 
-boost::regex UriParser::m_query_regex
+std::regex UriParser::m_query_regex
 	("([^&=]+)=?([^&]*)(&)?");
 
 UriParser::UriParser()
@@ -17,12 +17,11 @@ UriParser::UriParser()
 bool UriParser::parse (const std::string& uri)
 {
 	std::string decoded_uri = decode (uri);
-	std::cout << "Decoded uri: " << decoded_uri << std::endl;
 	std::string::const_iterator start = decoded_uri.begin();
 	std::string::const_iterator end = decoded_uri.end();
-	boost::match_results<std::string::const_iterator> what;
-	boost::match_flag_type flags = boost::match_default;
-	if (!boost::regex_search(start, end, what, m_uri_regex, flags))
+	std::match_results<std::string::const_iterator> what;
+	std::regex_constants::match_flag_type flags = std::regex_constants::match_default;
+	if (!std::regex_search(start, end, what, m_uri_regex, flags))
 		return false;
 
 	m_scheme = std::string(what[2].first, what[2].second);
@@ -47,9 +46,9 @@ void UriParser::parseQuery (const std::string& QueryString)
 {
 	std::string::const_iterator start = QueryString.begin();
 	std::string::const_iterator end = QueryString.end();
-	boost::match_results<std::string::const_iterator> what;
-	boost::match_flag_type flags = boost::match_default;
-	while (boost::regex_search(start, end, what, m_query_regex, flags))
+	std::match_results<std::string::const_iterator> what;
+	std::regex_constants::match_flag_type flags = std::regex_constants::match_default;
+	while (std::regex_search(start, end, what, m_query_regex, flags))
 	{
 		std::string query_name (what[1].first, what[1].second);
 		std::string query_value (what[2].first, what[2].second);
