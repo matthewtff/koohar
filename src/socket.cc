@@ -8,12 +8,12 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <unistd.h>
 #include <fcntl.h>
 
 #endif /* _WIN32 */
 
 #include <errno.h>
-#include <unistd.h>
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>

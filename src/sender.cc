@@ -1,9 +1,12 @@
 #include "sender.hh"
 
 #include <errno.h>
-#include <unistd.h>
 #include <cstring>
 #include <algorithm>
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif /* _WIN32 */
 
 #include "response.hh"
 #include "file.hh"

@@ -17,17 +17,6 @@ namespace koohar {
 void initSockets();
 void destroySockets();
 
-#ifdef _WIN32
-
-void close (Socket::Handle sock);
-
-#else /* _WIN32 */
-
-enum { SOCKET_ERROR = -1 };
-
-#endif /* _WIN32 */
-
-
 /*
  * There're 2 types of sockets: listening and receiving/sending one (:
 */
@@ -77,6 +66,16 @@ private:
 	bool m_async;
 	bool m_ipv4;
 }; // class Socket
+
+#ifdef _WIN32
+
+void close ( Socket::Handle sock);
+
+#else /* _WIN32 */
+
+enum { SOCKET_ERROR = -1 };
+
+#endif /* _WIN32 */
 
 }; // namespace koohar
 

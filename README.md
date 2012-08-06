@@ -10,7 +10,7 @@ First of all make sure you've got installed boost on your system.
 Linux:
 
 To build library go to koohar/src and execute "make". It would bring you
-shared and static libraries. (gcc 4.5(+/- 0.1) or higher is required)
+shared and static libraries (clang++ 3.1 or higher is required).
 
 Windows:
 
