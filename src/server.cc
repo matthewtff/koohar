@@ -31,7 +31,7 @@ Server::Server(const std::string& Address, const unsigned short Port,
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
 #ifdef _DEBUG
 		// TODO: Create and use some log mechanism for such cases.
-		std::cerr << "[Server::Server] Unable to catch signal SIGPIPE" << std::endl;
+		std::cout << "[Server::Server] Unable to catch signal SIGPIPE" << std::endl;
 #endif /* _DEBUG */
 	}
 

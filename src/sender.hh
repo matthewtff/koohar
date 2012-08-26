@@ -1,6 +1,7 @@
 #ifndef koohar_sender_hh
 #define koohar_sender_hh
 
+#include <memory>
 #include <cstdlib>
 #include <map>
 
@@ -18,7 +19,6 @@ namespace std {
 
 #endif /* _WIN32 */
 
-#include "filemapping.hh"
 #include "thread.hh"
 #include "socket.hh"
 #include "async.hh"
@@ -26,6 +26,10 @@ namespace std {
 namespace koohar {
 
 class Response;
+class Async;
+class FileMapping;
+class Socket;
+
 class Sender;
 
 struct SendData {
@@ -37,7 +41,7 @@ struct SendData {
 	};
 	
 	SendData (char* NewData, const size_t NewSize, const DataType NewType,
-		const size_t NewId, FileMapping* Map) :
+		const size_t NewId, std::shared_ptr<FileMapping> Map) :
 		m_data(NewData), m_size(NewSize), m_offset(0), m_type(NewType),
 		m_id(NewId), m_map(Map)
 	{}
@@ -47,7 +51,7 @@ struct SendData {
 	size_t m_offset;
 	DataType m_type;
 	size_t m_id;
-	FileMapping* m_map;
+	std::shared_ptr<FileMapping> m_map;
 	
 	bool operator < (const SendData& That) const { return m_id < That.m_id; }
 	

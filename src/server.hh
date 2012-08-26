@@ -20,6 +20,7 @@ public:
 	void port(const int NewPort) { m_port = NewPort; }
 	unsigned short port() const { return m_port; }
 	virtual void stop () { m_socket.close(); }
+
 private:
 	Socket m_socket;
 	std::string m_address;

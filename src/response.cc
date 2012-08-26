@@ -1,12 +1,12 @@
+#include "response.hh"
+
 #include <cstring>
 #include <errno.h>
 
-#include "response.hh"
+#include "sender.hh"
 
 #ifdef _DEBUG
-
 #include <iostream>
-
 #endif
 
 namespace koohar {
@@ -22,8 +22,7 @@ void Response::writeHead(unsigned short State)
 	if (!m_headers_allowed)
 		return;
 	std::string head("HTTP/1.1 ");
-	head.append(States[State]);
-	head.append("\r\n");
+	head += States[State] + "\r\n";
 	transfer(head.c_str(), head.length());
 }
 
@@ -61,7 +60,7 @@ bool Response::body(const void* Buffer, const off_t BufferSize)
 		sendHeaders();
 	} else if (!m_headers.empty()) { // TODO: fix problem with headers by good error handling
 #ifdef _DEBUG
-		std::cerr << "[Response::body] Double header sending" << std::endl;
+		std::cout << "[Response::body] Double header sending" << std::endl;
 #endif
 		return false;
 	}
@@ -178,11 +177,9 @@ bool Response::transfer(const void* Buffer, const off_t BufferSize)
 void Response::sendHeaders()
 {
 	std::string str;
-	for(StringMap::iterator anyHeader = m_headers.begin(); anyHeader != m_headers.end(); anyHeader++) { // send all headers
-		str = anyHeader->first;
-		str.append(": ");
-		str.append(anyHeader->second);
-		str.append("\r\n");
+	for (auto header : m_headers) { // send all headers
+		str = header.first;
+		str.append(": ").append(header.second).append("\r\n");
 		transfer(str.c_str(), str.length());
 	}
 	transfer("\r\n", 2);

@@ -1,7 +1,10 @@
-CC=g++
+#CC=g++
+CC=clang++
+
+#CFLAGS=-c -std=c++0x -g -ggdb -stdlib=libc++ -D_DEBUG
+CFLAGS=-c -std=c++0x -O2 -stdlib=libc++ -g
+
 WARNINGS=-Wall -Wextra -Wold-style-cast -Woverloaded-virtual
-CFLAGS=-c -std=c++0x -g -ggdb
-#CFLAGS=-c -std=c++0x -O2
 LIBNAME=koohar
 LIBPATH=.
 INCPATH=../src/
@@ -10,7 +13,7 @@ INC=-I$(INCPATH)
 all: tests
 
 tests: main.o index.o loginbox.o
-	$(CC) -g -ggdb $(WARNINGS) $(INC) main.o index.o loginbox.o -lboost_regex -lpthread -L$(LIBPATH) -l$(LIBNAME) -o koohar
+	$(CC) -g -O2 -std=c++0x -stdlib=libc++ $(WARNINGS) $(INC) main.o index.o loginbox.o -lboost_regex -lpthread -L$(LIBPATH) -l$(LIBNAME) -o koohar
 
 main.o: main.cc index.hh
 	$(CC) $(WARNINGS) $(CFLAGS) $(INC) main.cc

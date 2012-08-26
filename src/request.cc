@@ -8,14 +8,7 @@
 
 #endif /* _WIN32 */
 
-#include <algorithm>
-#include <cstring>
-
 #include "request.hh"
-
-#ifdef _DEBUG
-#include <iostream>
-#endif /* _DEBUG */
 
 namespace koohar {
 

@@ -77,7 +77,7 @@ Socket::Socket (const bool Async, const bool IPv4) :
 }
 
 Socket::Socket (const Handle Sock, const std::string& IP,
-	const std::string& Port, const bool Async, const bool IPv4) :
+	int Port, const bool Async, const bool IPv4) :
 	m_socket(Sock), m_ip(IP), m_port(Port), m_async(Async), m_ipv4(IPv4)
 {
 #ifndef _WIN32
@@ -94,10 +94,8 @@ void Socket::init()
 	m_socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, 0);
 	if (m_socket == INVALID_SOCKET) {
 #ifdef _DEBUG
-		std::cerr << "Invalid socket" << std::endl;
-#endif /* _DEBUG */
+		std::cout << "Invalid socket" << std::endl;
 		DWORD err = GetLastError();
-#ifdef _DEBUG
 		char msg[2000];
 		FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
 			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), msg, 2000, NULL);
@@ -123,9 +121,7 @@ void Socket::init()
 bool Socket::listen (const std::string& Address, const int Port, const int BackLog)
 {
 	m_ip = Address;
-	char port_str[6];
-	sprintf(port_str, "%d", Port);
-	m_port = port_str;
+	m_port = Port;
 
 	sockaddr_in sa;
 	memset(&sa, 0, sizeof(sa));
@@ -144,9 +140,7 @@ bool Socket::listen (const std::string& Address, const int Port, const int BackL
 bool Socket::connect (const std::string& Address, const int Port)
 {
 	m_ip = Address;
-	char port_str[6];
-	sprintf(port_str, "%d", Port);
-	m_port = port_str;
+	m_port = Port;
 
 	sockaddr_in sa;
 	memset(&sa, 0, sizeof(sa));
@@ -175,19 +169,16 @@ Socket Socket::accept () const
 		std::cout << "Error accepting socket: " << strerror(errno) << std::endl;
 #endif /* _DEBUG */
 	}
-	// these options are also not important to be set, so no return value check.
-	// actually i really don't know why this code is here.
-	// but it is kinda well comented, so just leave it.
 	/*const timeval wait_timeout = {0, 2000}; // timeout on recieve data from socket
 	setsockopt(accept_sock, SOL_SOCKET, SO_RCVTIMEO, &wait_timeout, sizeof(wait_timeout));
 	const linger close_timeout = {0, 1}; // unset timeout to close socket while there is data to be sent
 	setsockopt(accept_sock, SOL_SOCKET, SO_LINGER, &close_timeout, sizeof(close_timeout));*/
 	// fill in info about client
-	char port[6];
-	char ip[INET6_ADDRSTRLEN]; // we choose ipv6 cause INET6_ADDRSTRLEN > INET_ADDRSTRLEN
+	int port;
+	char ip[INET6_ADDRSTRLEN] = {0}; // we choose ipv6 cause INET6_ADDRSTRLEN > INET_ADDRSTRLEN
 	if (addr.sa_family == AF_INET) {
 		sockaddr_in* address = reinterpret_cast<sockaddr_in*>(&addr);
-		sprintf(port, "%d", address->sin_port);
+		port = address->sin_port;
 #ifdef _WIN32
 
 		getnameinfo(&addr, sizeof(addr), ip, INET_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
@@ -199,7 +190,7 @@ Socket Socket::accept () const
 #endif /* _WIN32 */
 	} else {
 		sockaddr_in6* address = reinterpret_cast<sockaddr_in6*>(&addr);
-		sprintf(port, "%d", address->sin6_port);
+		port = address->sin6_port;
 #ifdef _WIN32
 
 		getnameinfo(&addr, sizeof(addr), ip, INET6_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
@@ -241,7 +232,7 @@ Socket::Error Socket::getCh (char* Mem, const size_t Length, int &Readed)
 #ifdef _DEBUG
 		char msg[2000];
 		FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), msg, 2000, NULL);
-		std::cerr << msg;
+		std::cout << msg;
 #endif /* _DEBUG */
 		return PipeError;
 	}
@@ -253,10 +244,9 @@ Socket::Error Socket::getCh (char* Mem, const size_t Length, int &Readed)
 	readed_data = read(m_socket, Mem, Length);
 	Readed = readed_data;
 	if (readed_data < 0) {
-		if (errno == EAGAIN)
-			return AgainError;
-		else
-			return PipeError;
+		return (errno == EAGAIN)
+			? AgainError
+			: PipeError;
 	}
 
 #endif /* _WIN32 */

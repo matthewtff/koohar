@@ -57,8 +57,8 @@ bool File::open (AccessType Mode)
 #endif /* _WIN32 */
 
 #ifdef _DEBUG
-		std::cerr << "Error opening file " << m_fname << std::endl;
-		std::cerr << strerror(errno) << std::endl;
+		std::cout << "Error opening file " << m_fname << std::endl;
+		std::cout << strerror(errno) << std::endl;
 #endif /* _DEBUG */
 		return false;
 	}
@@ -100,7 +100,7 @@ void File::remove ()
 #endif /* _WIN32 */
 
 #ifdef _DEBUG
-		std::cerr << "Unable to remove file " << m_fname << std::endl;
+		std::cout << "Unable to remove file " << m_fname << std::endl;
 #endif /* _DEBUG */
 	}
 }
@@ -120,7 +120,7 @@ bool File::move (const std::string& NewFileName)
 #endif /* _WIN32 */
 
 #ifdef _DEBUG
-		std::cerr << "Unable move file " << m_fname << std::endl;
+		std::cout << "Unable move file " << m_fname << std::endl;
 #endif /* _DEBUG */
 		return false;
 	} else {
@@ -183,7 +183,7 @@ int File::write (File::Handle Hndl, const void* Buffer, size_t Length)
 #endif /* _WIN32 */
 
 #ifdef _DEBUG
-		std::cerr << "Error writing to file." << std::endl;
+		std::cout << "Error writing to file." << std::endl;
 #endif /* _DEBUG */
 		return IOError;
 	} else {

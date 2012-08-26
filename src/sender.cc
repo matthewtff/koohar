@@ -11,6 +11,8 @@
 #include "response.hh"
 #include "file.hh"
 
+#include "filemapping.hh"
+
 #ifdef _DEBUG
 #include <iostream>
 #endif /* _DEBUG */
@@ -21,8 +23,8 @@ void clearMapNode (const std::pair<const Socket::Handle, const SendData>& data)
 {
 	if (data.second.m_type == SendData::Data)
 		delete []data.second.m_data;
-	else if (data.second.m_type == SendData::File)
-		delete data.second.m_map;
+	/*else if (data.second.m_type == SendData::File)
+		delete data.second.m_map;*/
 }
 
 int sendData (const Socket::Handle Socket, const SendData& Data)
@@ -150,7 +152,7 @@ bool Sender::sendFile (const Socket::Handle SomeSocket, const char* SomeFileName
 	
 	size_t real_size = SomeSize ? SomeSize : static_file.size();
 	// try to map file : should be fastest
-	FileMapping* map = new FileMapping(static_file.fh());
+	std::shared_ptr<FileMapping> map (new FileMapping( static_file.fh() ) );
 	char* mapped_file = map->map(real_size, SomeOffset);
 	m_map_mutex.lock();
 	m_map.insert(std::pair<int, SendData>(SomeSocket, SendData(mapped_file, real_size, SendData::File, countEntries(SomeSocket), map)));

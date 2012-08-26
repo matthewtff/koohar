@@ -19,7 +19,7 @@ HandlerRet sigHandler (HandlerGet sig)
 	}
 }
 
-void ServerLogic(koohar::Request& Req, koohar::Response &Res, void*)
+void ServerLogic(koohar::Request& Req, koohar::Response &Res)
 {
 	if (Req.contains("/")) {
 		IndexPage index_page(Req, Res, views_dir + "./index.html");
@@ -40,13 +40,13 @@ int main(int argc, char* argv[])
 		host.assign(argv[1]);
 	if (argc > 2)
 		port = static_cast<unsigned short>(atoi(argv[2]));
-	koohar::App app(host, port, 1);
+	koohar::App<void(*)(koohar::Request&, koohar::Response&)> app(host, port, 1);
 	app.config("static_dir", "public");
 	app.config("static", "/html");
 	app.config("static", "/music");
 	app.config("static", "/images");
 	app.config("static", "/stylesheets");
 	app.config("static", "/js");
-	app.listen(ServerLogic, 0);
+	app.listen(ServerLogic);
 	return 0;
 }

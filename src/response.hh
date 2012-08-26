@@ -4,10 +4,11 @@
 #include <string>
 #include <map>
 
-#include "sender.hh"
 #include "socket.hh"
 
 namespace koohar {
+
+class Sender;
 
 typedef std::map<std::string, std::string> StringMap;
 

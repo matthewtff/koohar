@@ -14,6 +14,7 @@
 
 namespace koohar {
 
+// Windows sockets cant live without these dirty hacks....
 void initSockets();
 void destroySockets();
 
@@ -43,7 +44,7 @@ public:
 	Socket () {}
 	Socket (const bool Async, const bool IPv4); // future listening socket
 	Socket (const Handle Sock, const std::string& IP,
-		const std::string& Port, const bool Async = true,
+		int Port, const bool Async = true,
 		const bool IPv4 = true); // receiving/sending socket
 
 	void init ();
@@ -57,12 +58,12 @@ public:
 	Error getCh (char* Mem, const size_t Length, int &Readed);
 	Handle fd () const { return m_socket; }
 	std::string ip () const { return m_ip; }
-	std::string port () const { return m_port; }
+	int port () const { return m_port; }
 
 private:
 	Handle m_socket;
 	std::string m_ip;
-	std::string m_port;
+	int m_port;
 	bool m_async;
 	bool m_ipv4;
 }; // class Socket
