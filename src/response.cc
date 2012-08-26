@@ -1,5 +1,6 @@
 #include "response.hh"
 
+#include <algorithm>
 #include <cstring>
 #include <errno.h>
 
@@ -177,11 +178,11 @@ bool Response::transfer(const void* Buffer, const off_t BufferSize)
 void Response::sendHeaders()
 {
 	std::string str;
-	for (auto header : m_headers) { // send all headers
+	std::for_each(m_headers.begin(), m_headers.end(), [&](const std::pair<std::string, std::string>& header) {
 		str = header.first;
 		str.append(": ").append(header.second).append("\r\n");
 		transfer(str.c_str(), str.length());
-	}
+	});
 	transfer("\r\n", 2);
 	m_headers.clear();
 	m_headers_allowed = false; // no more headers
