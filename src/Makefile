@@ -10,7 +10,7 @@ LIBNAME=libkoohar.so
 MAJOR_VER=1
 MINOR_VER=0
 LIBFNAME=$(LIBNAME)
-SOURCES=async.cc server.cc request.cc response.cc socket.cc sender.cc\
+SOURCES=app.cc async.cc server.cc request.cc response.cc socket.cc sender.cc\
 file.cc filemapping.cc thread.cc date.cc xmlobjects.cc parser.cc webpage.cc\
 webui.cc http_parser.cc uri_parser.cc
 OBJECTS=$(SOURCES:.cc=.o)

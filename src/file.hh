@@ -21,11 +21,11 @@ public:
 
 #ifdef _WIN32
 
-	enum AccessType {
-		ReadOnly = GENERIC_READ,
-		WriteOnly = GENERIC_WRITE,
-		ReadWrite = (GENERIC_READ | GENERIC_WRITE)
-	};
+	typedef DWORD AccessType;
+
+	static const AccessType ReadOnly = GENERIC_READ;
+	static const AccessType WriteOnly = GENERIC_WRITE;
+	static const AccessType ReadWrite = (GENERIC_READ | GENERIC_WRITE);
 
 	typedef HANDLE Handle;
 

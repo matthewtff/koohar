@@ -44,10 +44,11 @@ bool Request::corresponds (const std::string& Param) const
 {
 	if (Param.empty() || path().empty() || path().length() < Param.length())
 		return false;
-	for (size_t count = 0; count < Param.length(); ++count)
+	return path().find(Param) == 0;
+	/*for (size_t count = 0; count < Param.length(); ++count)
 		if (Param[count] != path()[count])
 			return false;
-	return true;
+	return true;*/
 }
 
 bool Request::receive ()
