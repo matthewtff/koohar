@@ -4,7 +4,8 @@
 #include <cstring>
 #include <errno.h>
 
-#include "sender.hh"
+#include "file.hh"
+#include "filemapping.hh"
 
 #ifdef _DEBUG
 #include <iostream>
@@ -14,9 +15,13 @@ namespace koohar {
 
 Response::StateMap Response::States = Response::initStates();
 
-Response::Response (Sender& sender) : m_headers_allowed(true), m_sender(sender)
+/*Response::Response (Sender& sender) : m_headers_allowed(true), m_sender(sender)
 {
-}
+}*/
+
+Response::Response (HttpConnection::Pointer Connection) :
+	m_headers_allowed(true), m_connection(Connection)
+{}
 
 void Response::writeHead(unsigned short State)
 {
@@ -38,7 +43,8 @@ void Response::header(const std::string& HeaderName, const std::string& HeaderVa
 }
 
 /**
- * Actually you should be very carefull to this method cause it does not seem to replace existing cookie value.
+ * Actually you should be very carefull to this method cause it does not seem
+ * to replace existing cookie value.
  */
 bool Response::cookie(const std::string& CookieName, const std::string& CookieValue)
 {
@@ -46,7 +52,7 @@ bool Response::cookie(const std::string& CookieName, const std::string& CookieVa
 	cookie_str.append("; Path=/;");
 	if (CookieName.empty() || CookieValue.empty())
 		return false;
-	header("Set-Cookie", cookie_str, false); // we do not want to replace all cookies, just add one
+	header("Set-Cookie", cookie_str, false); // dont replace all cookies, just add
 	return true;
 }
 
@@ -59,7 +65,7 @@ bool Response::body(const void* Buffer, const off_t BufferSize)
 {
 	if (m_headers_allowed) { // sending headers
 		sendHeaders();
-	} else if (!m_headers.empty()) { // TODO: fix problem with headers by good error handling
+	} else if (!m_headers.empty()) {
 #ifdef _DEBUG
 		std::cout << "[Response::body] Double header sending" << std::endl;
 #endif
@@ -72,7 +78,21 @@ bool Response::sendFile(const char* FileName, const off_t Size, const off_t Offs
 {
 	if (m_headers_allowed)
 		sendHeaders();
-	return m_sender.sendFile(m_socket.fd(), FileName, Size, Offset);
+
+	File file(FileName);
+	if (!file.open(File::ReadOnly))
+		return false;
+	
+	FileMapping mapping(file.getHandle());
+	char* mapped_file = mapping.map(Size, Offset);
+
+	if (mapped_file)
+		transfer(mapped_file, Size);
+	else
+		return false;
+	mapping.unMap();
+
+	return true;
 }
 
 void Response::end(const std::string& String)
@@ -86,14 +106,14 @@ void Response::end(const void* Buffer, const off_t BufferSize)
 		sendHeaders();
 	if (Buffer && BufferSize)
 		body(Buffer, BufferSize);
-	m_sender.close(m_socket.fd());
+	m_connection->close();
 }
 
 void Response::end()
 {
 	if (m_headers_allowed)
 		sendHeaders();
-	m_sender.close(m_socket.fd());
+	m_connection->close();
 }
 
 void Response::redirect(const std::string& Url)
@@ -172,16 +192,17 @@ Response::StateMap Response::initStates ()
 
 bool Response::transfer(const void* Buffer, const off_t BufferSize)
 {
-	return m_sender.send(m_socket.fd(), static_cast<const char*>(Buffer), BufferSize);
+	m_connection->write(static_cast<const char*>(Buffer), BufferSize);
+	return true;
 }
 
 void Response::sendHeaders()
 {
-	std::string str;
 	std::for_each(m_headers.begin(), m_headers.end(), [&](const std::pair<std::string, std::string>& header) {
-		str = header.first;
-		str.append(": ").append(header.second).append("\r\n");
-		transfer(str.c_str(), str.length());
+		transfer(header.first.c_str(), header.first.length());
+		transfer(": ", 2);
+		transfer(header.second.c_str(), header.second.length());
+		transfer("\r\n", 2);
 	});
 	transfer("\r\n", 2);
 	m_headers.clear();

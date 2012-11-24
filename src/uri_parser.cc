@@ -61,7 +61,9 @@ void UriParser::parseQuery (const std::string& QueryString)
 
 char UriParser::fromHex (const char ch)
 {
-	return isdigit(ch) ? ch - '0' : tolower(ch) - 'a' + 10;
+	return isdigit(ch)
+		? ch - '0'
+		: tolower(ch) - 'a' + 10;
 }
 
 std::string UriParser::decode (const std::string& Uri)

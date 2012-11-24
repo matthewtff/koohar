@@ -1,6 +1,7 @@
 #ifndef koohar_http_parser_hh
 #define koohar_http_parser_hh
 
+#include <cstdint>
 #include <string>
 #include <regex>
 
@@ -40,7 +41,8 @@ public:
 	};
 
 public:
-	HttpParser();
+	HttpParser ();
+	virtual ~HttpParser () {}
 
 	/**
 	 * Makes parser to eat more data and parse it. Could be called multiple
@@ -101,7 +103,7 @@ private:
 	std::string m_token;
 	std::string m_current_header;
 
-	unsigned long long m_content_length;
+	std::uint64_t m_content_length;
 
 }; // class HttpParser
 

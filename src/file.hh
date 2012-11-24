@@ -57,9 +57,9 @@ public:
 	bool move (const std::string& NewFileName);
 	int read (void* Buffer, size_t Length);
 	int write (const void* Buffer, size_t Length);
-	size_t size () const { return m_size; }
-	time_t time () const { return m_time; }
-	Handle fh () const { return m_file; }
+	size_t getSize () const { return m_size; }
+	time_t getTime () const { return m_time; }
+	Handle getHandle () const { return m_file; }
 
 public:
 	static int read (Handle Hndl, void* Buffer, size_t Length);

@@ -21,9 +21,9 @@ bool Parser::parse(const std::string& FileName)
 #endif /* _DEBUG */
 		return false;
 	}
-	m_size = xml_file.size();
+	m_size = xml_file.getSize();
 	m_offset = 0;
-	FileMapping xml_map(xml_file.fh());
+	FileMapping xml_map(xml_file.getHandle());
 	m_mapped_file = xml_map.map(m_size, 0);
 	m_xml.clear();
 	while (readObject(m_xml));

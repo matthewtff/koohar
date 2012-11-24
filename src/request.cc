@@ -31,39 +31,16 @@ void Request::unsetSession (const std::string& Key)
 		m_session->erase(Key);
 }
 
-bool Request::contains (const std::string& Param) const
+bool Request::contains (const std::string& Url) const
 {
-	if (Param.empty() || path().empty())
-		return false;
-	if (path().find(Param) == path().npos)
-		return false;
-	return true;
+	return uri().find(Url) != Url.npos;
 }
 
-bool Request::corresponds (const std::string& Param) const
+bool Request::corresponds (const std::string& StaticUrl) const
 {
-	if (Param.empty() || path().empty() || path().length() < Param.length())
+	if (uri().empty() || uri().length() < StaticUrl.length())
 		return false;
-	return path().find(Param) == 0;
-	/*for (size_t count = 0; count < Param.length(); ++count)
-		if (Param[count] != path()[count])
-			return false;
-	return true;*/
-}
-
-bool Request::receive ()
-{
-	char buf[256];
-	int readed = 0;
-	Socket::Error sock_err = m_socket.getCh(buf, sizeof(buf), readed);
-	switch (sock_err) {
-		case Socket::AgainError: return false;
-		case Socket::PipeError: return true;
-		default: // SOCK_NO_ERROR
-			break;
-	}
-	update(buf, readed); // HttpParser::Update
-	return isComplete(); // HttpParser::isComplete
+	return uri().find(StaticUrl) == 0;
 }
 
 }; // namespace koohar

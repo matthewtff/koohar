@@ -4,7 +4,7 @@
 #include <string>
 #include <map>
 
-#include "socket.hh"
+#include "http_connection.hh"
 
 namespace koohar {
 
@@ -19,8 +19,7 @@ public:
 	static StateMap States;
 
 public:
-	Response(Sender& sender); // Response is useless whitout Sender.
-	void socket(const Socket& socket) { m_socket = socket; }
+	Response(HttpConnection::Pointer Connection);
 
 	/**
 	 * Sets and sends appropriate http status to client.
@@ -89,11 +88,10 @@ private:
 	void sendHeaders();
 
 private:
-	Socket m_socket;
 	StringMap m_headers;
 	bool m_headers_allowed; // True, till any part of body is sent.
-	Sender& m_sender;
-
+	
+	HttpConnection::Pointer m_connection;
 }; // class Response
 
 }; // namespace koohar

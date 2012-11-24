@@ -15,7 +15,6 @@ public:
 private:
 	File::Handle m_file;
 	size_t m_page_size;
-	size_t m_align_size; // Mapping offset should be multiple of page_size, so some unneeded data could be maped
 	size_t m_size;
 	char* m_address;
 	bool m_mapped;

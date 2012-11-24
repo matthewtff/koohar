@@ -24,10 +24,11 @@ FileMapping::~FileMapping ()
 
 char* FileMapping::map (const size_t Size, const size_t Offset)
 {
-	m_align_size = static_cast<size_t>(Offset);
-	size_t offset = m_page_size * (Offset / m_page_size);
-	m_align_size -= offset;
-	m_size = Size + m_align_size;
+	size_t align_size = Offset;
+	size_t offset = Offset;
+	/*size_t offset = m_page_size * (Offset / m_page_size);
+	align_size -= offset;*/
+	m_size = Size + align_size;
 #ifdef _WIN32
 
 	if ((m_file_map = CreateFileMapping(m_file, NULL, PAGE_READONLY, 0, m_size, NULL)) != NULL)
@@ -43,7 +44,7 @@ char* FileMapping::map (const size_t Size, const size_t Offset)
 
 #endif /* _WIN32 */
 	m_mapped = true;
-	return m_address + m_align_size;
+	return m_address + align_size;
 }
 
 void FileMapping::unMap ()

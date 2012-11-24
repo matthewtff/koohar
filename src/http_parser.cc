@@ -5,11 +5,6 @@
 
 namespace koohar {
 
-inline HttpParser::Method operator++ (HttpParser::Method& rs)
-{
-	return rs = static_cast<HttpParser::Method>(rs + 1);
-}
-
 std::regex HttpParser::m_cookie_regex
 	("([^=]+)=?([^;]*)(;)?[:space]?");
 
@@ -155,7 +150,7 @@ void HttpParser::parseHeaderValue (char ch)
 	if (ch == '\n') {
 		m_headers[m_current_header] = m_token;
 		if (m_current_header == "content-length")
-			m_content_length = atoi(m_token.c_str());
+			m_content_length = atoll(m_token.c_str());
 		else if (m_current_header == "cookie")
 			parseCookies(m_token);
 		m_state = OnHeaderName;
