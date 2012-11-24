@@ -59,6 +59,7 @@ void FileMapping::unMap ()
 	munmap(static_cast<void*>(m_address), m_size);
 
 #endif /* _WIN32 */
+	m_mapped = false;
 }
 
 }; // namespace koohar

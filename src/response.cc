@@ -4,7 +4,6 @@
 #include <cstring>
 #include <errno.h>
 
-#include "file.hh"
 #include "filemapping.hh"
 
 #ifdef _DEBUG
@@ -74,20 +73,16 @@ bool Response::body(const void* Buffer, const off_t BufferSize)
 	return transfer(Buffer, BufferSize);
 }
 
-bool Response::sendFile(const char* FileName, const off_t Size, const off_t Offset)
+bool Response::sendFile(File::Handle FileHandle, const off_t Size, const off_t Offset)
 {
 	if (m_headers_allowed)
 		sendHeaders();
 
-	File file(FileName);
-	if (!file.open(File::ReadOnly))
-		return false;
-	
-	FileMapping mapping(file.getHandle());
+	FileMapping mapping(FileHandle);
 	char* mapped_file = mapping.map(Size, Offset);
 
 	if (mapped_file)
-		transfer(mapped_file, Size);
+		transfer(static_cast<const void*>(mapped_file), Size);
 	else
 		return false;
 	mapping.unMap();

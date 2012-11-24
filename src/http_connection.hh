@@ -2,6 +2,9 @@
 #define koohar_http_connection_hh
 
 #include <string>
+#include <memory>
+#include <list>
+#include <map>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 
@@ -26,6 +29,10 @@ public:
 	typedef std::function< void (koohar::Request&, koohar::Response&) >
 		UserFunc;
 
+	typedef std::list< std::shared_ptr< const char > > DataBuffers;
+
+	typedef std::map< std::string, std::string > StringMap;
+
 public:
 	static Pointer create (boost::asio::io_service& IoService,
 		UserFunc UserCallFunction, const ServerConfig* Config);
@@ -39,6 +46,12 @@ public:
 	void close ();
 
 	void setUserCallFunction (UserFunc UserCallFunction);
+
+	static StringMap initMimeTypes ();
+
+public:
+
+	static StringMap m_mime_types;
 
 private:
 	HttpConnection (boost::asio::io_service& IoService,
@@ -59,6 +72,9 @@ private:
 
 	Request m_request;
 	UserFunc m_user_call_function;
+	DataBuffers m_buffers;
+	size_t m_writing_operations;
+	bool m_close_socket;
 };
 
 } // namespace koohar

@@ -5,10 +5,46 @@
 #include "response.hh"
 #include "file.hh"
 
+#include <iostream>
+
 using boost::asio::ip::tcp;
 
 namespace koohar {
 
+HttpConnection::StringMap HttpConnection::initMimeTypes ()
+{
+	StringMap mimes;
+	mimes["png"] = "image/png";
+	mimes["jpg"] = "image/jpeg";
+	mimes["gif"] = "image/gif";
+	mimes["peg"] = "image/jpeg";
+	mimes["jpe"] = "image/jpeg";
+	mimes["tif"] = "image/tiff";
+	mimes["iff"] = "image/tiff";
+	mimes["htm"] = "text/html";
+	mimes["tml"] = "text/html";
+	mimes["txt"] = "text/plain";
+	mimes["css"] = "text/css";
+	mimes["rtx"] = "text/richtext";
+	mimes["pdf"] = "application/pdf";
+	mimes["rtf"] = "application/rtf";
+	mimes["zip"] = "application/zip";
+	mimes["wav"] = "application/x-wav";
+	mimes["mka"] = "audio/x-matroska";
+	mimes["peg"] = "video/mpeg";
+	mimes["mpg"] = "video/mpeg";
+	mimes["mpe"] = "video/mpeg";
+	mimes["mkv"] = "video/x-matroska";
+	mimes["ebm"] = "video/webm"; // webm actually
+	mimes["mov"] = "video/quicktime";
+	mimes[".js"] = "application/x-javascript";
+	mimes["k3d"] = "video/x-matroska-3d"; // mk3d actually
+	mimes["son"] = "application/json"; // json actually
+	return mimes;
+}
+
+StringMap HttpConnection::m_mime_types = HttpConnection::initMimeTypes();
+	
 HttpConnection::Pointer HttpConnection::create (
 	boost::asio::io_service& IoService, UserFunc UserCallFunction,
 	const ServerConfig* Config)
@@ -38,17 +74,26 @@ void HttpConnection::write (const char* Data, size_t Size)
 	if (!Data || !Size)
 		return;
 
-	boost::asio::async_write(m_socket, boost::asio::buffer(Data, Size),
+	std::shared_ptr<char> buffer (new char[Size]);
+
+	std::memcpy(buffer.get(), Data, Size);
+
+	boost::asio::async_write(m_socket, boost::asio::buffer(buffer.get(), Size),
 		boost::bind(&HttpConnection::handleWrite, shared_from_this(),
 			boost::asio::placeholders::error,
 			boost::asio::placeholders::bytes_transferred
 		)
 	);
+
+	m_buffers.push_back(buffer);
+
+	++m_writing_operations;
 }
 
 void HttpConnection::close ()
 {
-	m_socket.close();
+	//m_socket.close();
+	m_close_socket = true;
 }
 
 void HttpConnection::setUserCallFunction (UserFunc UserCallFunction)
@@ -61,7 +106,9 @@ void HttpConnection::setUserCallFunction (UserFunc UserCallFunction)
 HttpConnection::HttpConnection (boost::asio::io_service& IoService,
 	UserFunc UserCallFunction, const ServerConfig* Config) :
 	ServerConfig(*Config), m_socket(IoService),
-	m_user_call_function(UserCallFunction)
+	m_user_call_function(UserCallFunction),
+	m_writing_operations(0),
+	m_close_socket(false)
 {}
 
 void HttpConnection::handleRead (const boost::system::error_code& Error,
@@ -93,9 +140,16 @@ void HttpConnection::handleWrite (const boost::system::error_code& Error,
 		std::cout << "HttpConnection[write_error] : " << Error.message()
 			<< std::endl;
 	}
-	else if (BytesTransferred == 0)
+	else if (BytesTransferred == 0) {
 		std::cout << "HttpConnection[write_error] : transferred 0 bytes"
 			<< std::endl;
+	}
+
+	--m_writing_operations;
+	if (m_writing_operations < 0)
+		m_writing_operations = 0;
+	if (m_close_socket && m_writing_operations == 0)
+		m_socket.close();
 }
 
 void HttpConnection::transferStatic (Response& Res)
@@ -120,8 +174,13 @@ void HttpConnection::transferStatic (Response& Res)
 		return;
 	}
 
+	Res.header("Connection", "Close");
+	Res.header("Server", "koohar.app");
+	std::string mime = m_mime_types[file_name.substr(file_name.length() - 3, 3)];
+	Res.header("Content-Type", mime);
+
 	Res.writeHead(200);
-	Res.sendFile(file_name.c_str(), static_file.getSize(), 0);
+	Res.sendFile(static_file.getHandle(), static_file.getSize(), 0);
 	Res.end();
 }
 

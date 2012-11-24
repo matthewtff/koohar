@@ -5,6 +5,7 @@
 #include <map>
 
 #include "http_connection.hh"
+#include "file.hh"
 
 namespace koohar {
 
@@ -49,7 +50,7 @@ public:
 	 * Cannot be used whith body() method. After using you still should call
 	 * the end() method.
 	 */
-	bool sendFile(const char* FileName, const off_t Size, const off_t Offset);
+	bool sendFile(File::Handle FileHandle, const off_t Size, const off_t Offset);
 
 	void end (const std::string& String);
 
