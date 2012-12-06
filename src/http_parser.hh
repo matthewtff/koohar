@@ -47,9 +47,9 @@ public:
 	/**
 	 * Makes parser to eat more data and parse it. Could be called multiple
 	 * times.
-	 * \param Data Pointer to data that should be parsed.
-	 * \param Size Size of data pointed ealrier.
-	 * \return false on parse error, true otherwise.
+	 * @param Data Pointer to data that should be parsed.
+	 * @param Size Size of data pointed ealrier.
+	 * @return false on parse error, true otherwise.
 	 */
 	bool update (const char* Data, unsigned int Size);
 	bool isBad () const { return m_state == OnParseError; }

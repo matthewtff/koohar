@@ -23,14 +23,9 @@ public:
 	{
 		// check if element with that search rule already exists
 		iterator it = SearchRule.empty() ? end() : find(SearchRule);
-		if (it != end()) { // and if exists
-			try {
-				return it->second; // try to cast it to T
-			} catch (...) { // if impossible
-				it->second.reset(); // delete existing element
-			}
-		}
-		webui::ObjectPtr NewObject (new T(SearchRule, Tag)); // and create new one
+		if (it != end()) // and if exists
+			return it->second; // return it
+		webui::ObjectPtr NewObject (new T(SearchRule, Tag)); // else create new
 		this->operator[](SearchRule) = NewObject;
 		return NewObject;
 	}
@@ -96,6 +91,6 @@ private:
 	const DoPredicate& m_do_pred;
 }; // class ObjectPredicate
 
-}; // namespace koohar
+} // namespace koohar
 
 #endif // koohar_webpage_hh

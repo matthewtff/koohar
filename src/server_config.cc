@@ -1,5 +1,7 @@
 #include "server_config.hh"
 
+#include "request.hh"
+
 namespace koohar {
 
 void ServerConfig::config (Option Key, const std::string& Value)

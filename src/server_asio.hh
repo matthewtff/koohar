@@ -1,8 +1,6 @@
 #ifndef koohar_server_asio_hh
 #define koohar_server_asio_hh
 
-#include <functional>
-
 #include <boost/asio.hpp>
 
 #include "http_connection.hh"
@@ -38,6 +36,6 @@ private:
 	ServerConfig m_server_config;
 }; // class ServerAsio
 
-}; // namespace koohar
+} // namespace koohar
 
 #endif // koohar_server_asio_hh

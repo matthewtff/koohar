@@ -4,9 +4,9 @@
 #include <string>
 #include <list>
 
-#include "request.hh"
-
 namespace koohar {
+
+class Request;
 
 class ServerConfig {
 
@@ -38,6 +38,6 @@ private:
 
 }; // class ServerConfig
 
-}; // namespace koohar
+} // namespace koohar
 
 #endif // koohar_server_config_hh

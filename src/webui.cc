@@ -15,15 +15,10 @@ std::string& Object::set (const std::string& Prop)
 
 bool Object::appendChild (ObjectPtr Child)
 {
-	try {
-		m_children.push_back(Child);
-	} catch (...) {
-		return false;
-	}
+	m_children.push_back(Child);
 	return true;
 }
 
+} // namespace webui
 
-}; // namespace webui
-
-}; // namespace koohar
+} // namespace koohar

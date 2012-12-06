@@ -15,8 +15,6 @@ void Object::property(const Property& Prop)
 
 const std::string Object::text () const
 {
-	/*for (std::list<Property>::const_iterator it = m_properties.begin();
-		it != m_properties.end(); ++it)*/
 	for (auto it = m_properties.begin(); it != m_properties.end(); ++it) {
 		if (!it->name().compare("text"))
 			return it->value();
@@ -74,6 +72,6 @@ void Object::copy (Object& CopyTo)
 		CopyTo.object(*it);
 }
 
-}; // namespace xml
+} // namespace xml
 
-}; // namespace koohar
+} // namespace koohar

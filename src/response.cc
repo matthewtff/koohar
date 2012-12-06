@@ -1,7 +1,6 @@
 #include "response.hh"
 
 #include <algorithm>
-#include <cstring>
 #include <errno.h>
 
 #include "filemapping.hh"
@@ -13,10 +12,6 @@
 namespace koohar {
 
 Response::StateMap Response::States = Response::initStates();
-
-/*Response::Response (Sender& sender) : m_headers_allowed(true), m_sender(sender)
-{
-}*/
 
 Response::Response (HttpConnection::Pointer Connection) :
 	m_headers_allowed(true), m_connection(Connection)

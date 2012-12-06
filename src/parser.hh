@@ -58,8 +58,8 @@ private:
 
 }; // class Parser
 
-}; // namespace xml
+} // namespace xml
 
-}; // namespace koohar
+} // namespace koohar
 
 #endif // koohar_parser_hh

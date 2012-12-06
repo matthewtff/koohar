@@ -10,7 +10,6 @@ namespace koohar {
 
 class Request : public HttpParser {
 public:
-	Request ();
 	void session (StringMap* Session) { m_session = Session; }
 	std::string& session (const std::string& Key);
 	void unsetSession (const std::string& Key);
@@ -25,6 +24,6 @@ private:
 	StringMap* m_session;
 }; // class Request
 
-}; // namespace koohar
+} // namespace koohar
 
 #endif // koohar_request_hh

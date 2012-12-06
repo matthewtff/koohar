@@ -145,9 +145,8 @@ void HttpConnection::handleWrite (const boost::system::error_code& Error,
 			<< std::endl;
 	}
 
-	--m_writing_operations;
-	if (m_writing_operations < 0)
-		m_writing_operations = 0;
+	if (m_writing_operations > 0)
+		--m_writing_operations;
 	if (m_close_socket && m_writing_operations == 0)
 		m_socket.close();
 }

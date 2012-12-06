@@ -1,3 +1,5 @@
+#include "request.hh"
+
 #ifdef _WIN32
 
 #include <winsock2.h>
@@ -8,15 +10,9 @@
 
 #endif /* _WIN32 */
 
-#include "request.hh"
-
 namespace koohar {
 
 std::string Request::m_session_error = "Session is not set.";
-
-Request::Request ()
-{
-}
 
 std::string& Request::session (const std::string& Key)
 {
@@ -43,4 +39,4 @@ bool Request::corresponds (const std::string& StaticUrl) const
 	return uri().find(StaticUrl) == 0;
 }
 
-}; // namespace koohar
+} // namespace koohar

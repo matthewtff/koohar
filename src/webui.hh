@@ -4,7 +4,6 @@
 #include <map>
 #include <list>
 #include <string>
-#include <algorithm>
 #include <memory>
 
 namespace koohar {

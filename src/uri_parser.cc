@@ -76,10 +76,8 @@ std::string UriParser::decode (const std::string& Uri)
 			ret_str.append(1,
 				fromHex(Uri[counter + 1]) << 4 | fromHex(Uri[counter + 2]));
 			counter += 2;
-		} else if (Uri[counter] == '+')
-			ret_str.append(1, ' ');
-		else
-			ret_str.append(1, Uri[counter]);
+		} else
+			ret_str.append(1, Uri[counter] == '+' ? ' ' : Uri[counter]);
 	}
 	return ret_str;
 }

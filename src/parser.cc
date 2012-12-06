@@ -199,6 +199,6 @@ void Parser::parseIntro()
 	m_xml.objects(ObjPredicate(m_koohar_tag, m_koohar_path_prop_name));
 }
 
-}; // namespace xml
+} // namespace xml
 
-}; // namespace koohar
+} // namespace koohar

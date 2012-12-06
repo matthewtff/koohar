@@ -2,9 +2,8 @@
 #define koohar_uri_parser_hh
 
 #include <string>
-#include <map>
-
 #include <regex>
+#include <map>
 
 namespace koohar {
 

@@ -69,7 +69,8 @@ FindByRule::FindByRule (const std::string& SearchRule) : m_rule(SearchRule),
 		m_rule.erase(0, 1);
 }
 
-bool FindByRule::operator() (xml::Property& Prop) const {
+bool FindByRule::operator() (xml::Property& Prop) const
+{
 	if (m_search_by_id)
 		return (!Prop.name().compare("id") && !Prop.value().compare(m_rule));
 	else if (m_search_by_class)
@@ -77,5 +78,5 @@ bool FindByRule::operator() (xml::Property& Prop) const {
 	return false;
 }
 
-}; // namespace koohar
+} // namespace koohar
 
