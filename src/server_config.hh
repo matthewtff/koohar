@@ -27,6 +27,9 @@ public:
 	bool isStaticUrl (const Request& Req);
 	std::string getStaticDir (void);
 
+	void load (const std::string& FileName);
+	void save (const std::string& FileName);
+
 private:
 
 	typedef std::list<std::string> StringList;

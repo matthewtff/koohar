@@ -1,5 +1,10 @@
 #include "server_config.hh"
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+//#include <boost/property_tree/json_parser.hpp>
+#include <boost/foreach.hpp>
+
 #include "request.hh"
 
 namespace koohar {
@@ -43,6 +48,36 @@ bool ServerConfig::isStaticUrl (const Request& Req)
 std::string ServerConfig::getStaticDir (void)
 {
 	return m_static_dir;
+}
+
+void ServerConfig::load (const std::string& FileName)
+{
+	using boost::property_tree::ptree;
+	ptree pt;
+
+	//read_json(FileName, pt);
+	read_xml(FileName, pt);
+
+	setStaticDir(pt.get<std::string>("config.public_dir"));
+
+	BOOST_FOREACH(ptree::value_type &v, pt.get_child("config.public_urls")) {
+		setStaticUrl(v.second.data());
+	}
+}
+
+void ServerConfig::save (const std::string& FileName)
+{
+	using boost::property_tree::ptree;
+	ptree pt;
+
+	pt.put("config.public_dir", m_static_dir);
+
+	BOOST_FOREACH(const std::string& url, m_static_urls) {
+		pt.add("config.public_urls", url);
+	}
+
+	//write_json(FileName, pt);
+	write_xml(FileName, pt);
 }
 
 } // namespace koohar
