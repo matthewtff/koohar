@@ -92,7 +92,6 @@ void HttpConnection::write (const char* Data, size_t Size)
 
 void HttpConnection::close ()
 {
-	//m_socket.close();
 	m_close_socket = true;
 }
 

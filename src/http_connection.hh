@@ -73,7 +73,7 @@ private:
 	Request m_request;
 	UserFunc m_user_call_function;
 	DataBuffers m_buffers;
-	size_t m_writing_operations;
+	int m_writing_operations;
 	bool m_close_socket;
 };
 

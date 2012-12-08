@@ -1,8 +1,9 @@
 #include "server_config.hh"
 
+#include <exception>
+
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
-//#include <boost/property_tree/json_parser.hpp>
 #include <boost/foreach.hpp>
 
 #include "request.hh"
@@ -33,6 +34,11 @@ void ServerConfig::setStaticUrl (const std::string& Url)
 	m_static_urls.push_back(Url);
 }
 
+void ServerConfig::setUseSSL (bool UseSSL)
+{
+	m_use_ssl = UseSSL;
+}
+
 bool ServerConfig::isStaticUrl (const Request& Req)
 {
 	for (auto static_url = m_static_urls.begin();
@@ -45,9 +51,14 @@ bool ServerConfig::isStaticUrl (const Request& Req)
 	return false;
 }
 
-std::string ServerConfig::getStaticDir (void)
+std::string ServerConfig::getStaticDir (void) const
 {
 	return m_static_dir;
+}
+
+bool ServerConfig::getUseSSL (void) const
+{
+	return m_use_ssl;
 }
 
 void ServerConfig::load (const std::string& FileName)
@@ -55,29 +66,24 @@ void ServerConfig::load (const std::string& FileName)
 	using boost::property_tree::ptree;
 	ptree pt;
 
-	//read_json(FileName, pt);
-	read_xml(FileName, pt);
-
-	setStaticDir(pt.get<std::string>("config.public_dir"));
-
-	BOOST_FOREACH(ptree::value_type &v, pt.get_child("config.public_urls")) {
-		setStaticUrl(v.second.data());
-	}
-}
-
-void ServerConfig::save (const std::string& FileName)
-{
-	using boost::property_tree::ptree;
-	ptree pt;
-
-	pt.put("config.public_dir", m_static_dir);
-
-	BOOST_FOREACH(const std::string& url, m_static_urls) {
-		pt.add("config.public_urls", url);
+	try {
+		read_xml(FileName, pt);
+	} catch (std::exception& e) {
+		std::cout << "Error reading xml: " << e.what() << std::endl;
+		return;
 	}
 
-	//write_json(FileName, pt);
-	write_xml(FileName, pt);
+	try {
+		setStaticDir(pt.get<std::string>("config.public_dir"));
+
+		BOOST_FOREACH(ptree::value_type &v, pt.get_child("config.public_urls")) {
+			setStaticUrl(v.second.data());
+		}
+
+		setUseSSL (static_cast<bool>(pt.get<short>("config.use_ssl")));
+	} catch (std::exception& e) {
+		std::cout << "Error loading config file: " << e.what() << std::endl;
+	}
 }
 
 } // namespace koohar

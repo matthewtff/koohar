@@ -23,12 +23,13 @@ public:
 
 	void setStaticDir (const std::string& Directory);
 	void setStaticUrl (const std::string& Url);
+	void setUseSSL (bool UseSSL);
 
 	bool isStaticUrl (const Request& Req);
-	std::string getStaticDir (void);
+	std::string getStaticDir (void) const;
+	bool getUseSSL (void) const;
 
 	void load (const std::string& FileName);
-	void save (const std::string& FileName);
 
 private:
 
@@ -38,6 +39,7 @@ private:
 
 	std::string m_static_dir;
 	StringList m_static_urls;
+	bool m_use_ssl;
 
 }; // class ServerConfig
 
