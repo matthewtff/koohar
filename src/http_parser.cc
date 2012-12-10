@@ -75,6 +75,11 @@ std::string HttpParser::cookie (const std::string& CookieName)
 	return m_cookies[CookieName];
 }
 
+std::string HttpParser::body () const
+{
+	return m_body;
+}
+
 // private
 
 void HttpParser::parseMethod (char ch)
