@@ -75,7 +75,7 @@ std::string HttpParser::cookie (const std::string& CookieName)
 	return m_cookies[CookieName];
 }
 
-std::string HttpParser::body () const
+std::string HttpParser::rawBody () const
 {
 	return m_body;
 }

@@ -59,7 +59,7 @@ public:
 	Version version () const { return m_version; }
 	std::string header (const std::string& HeaderName);
 	std::string cookie (const std::string& CookieName);
-	std::string body () const;
+	std::string rawBody () const;
 
 protected:
 	Method m_method;
