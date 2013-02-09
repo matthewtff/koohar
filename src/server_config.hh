@@ -3,6 +3,7 @@
 
 #include <string>
 #include <list>
+#include <map>
 
 namespace koohar {
 
@@ -27,18 +28,23 @@ public:
 
 	bool isStaticUrl (const Request& Req);
 	std::string getStaticDir (void) const;
-	bool getUseSSL (void) const;
+	bool getUseSSL () const;
 
 	void load (const std::string& FileName);
+
+	std::string getErrorPage (const unsigned short Code) const;
 
 private:
 
 	typedef std::list<std::string> StringList;
 
+	typedef std::map<unsigned short, std::string> StringMap;
+
 private:
 
 	std::string m_static_dir;
 	StringList m_static_urls;
+	StringMap m_error_pages;
 	bool m_use_ssl;
 
 }; // class ServerConfig

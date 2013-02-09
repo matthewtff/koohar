@@ -6,7 +6,11 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
 
+#include <cstdlib>
+
 #include "request.hh"
+
+#include <iostream>
 
 namespace koohar {
 
@@ -76,14 +80,33 @@ void ServerConfig::load (const std::string& FileName)
 	try {
 		setStaticDir(pt.get<std::string>("config.public_dir"));
 
-		BOOST_FOREACH(ptree::value_type &v, pt.get_child("config.public_urls")) {
+		BOOST_FOREACH(
+			ptree::value_type &v,
+			pt.get_child("config.public_urls")
+		) {
 			setStaticUrl(v.second.data());
+		}
+
+		BOOST_FOREACH(
+			ptree::value_type &v,
+			pt.get_child("config.error_pages")
+		) {
+			m_error_pages[std::atoi(v.first.data())] =  v.second.data();
 		}
 
 		setUseSSL (static_cast<bool>(pt.get<short>("config.use_ssl")));
 	} catch (std::exception& e) {
 		std::cout << "Error loading config file: " << e.what() << std::endl;
 	}
+}
+
+std::string ServerConfig::getErrorPage (const unsigned short Code) const
+{
+	StringMap::const_iterator page_iterator = m_error_pages.find(Code);
+	if (page_iterator != m_error_pages.end())
+		return page_iterator->second;
+	else
+		return std::string();
 }
 
 } // namespace koohar

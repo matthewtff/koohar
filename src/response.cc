@@ -155,7 +155,7 @@ Response::StateMap Response::initStates ()
 	States[415] = "415 Unsupported Media Type";
 	States[416] = "416 Requested Range Not Satisfiable";
 	States[417] = "417 Expectation Failed";
-	States[418] = "418 I'm a teapot"; // First april joke : rfc 2424 ( http://tools.ietf.org/html/rfc2324 )
+	States[418] = "418 I'm a teapot"; // First april joke : rfc 2424
 	States[422] = "422 Unprocessable Entity";
 	States[423] = "423 Loked";
 	States[424] = "424 Failed Dependency";
@@ -188,12 +188,16 @@ bool Response::transfer(const void* Buffer, const off_t BufferSize)
 
 void Response::sendHeaders()
 {
-	std::for_each(m_headers.begin(), m_headers.end(), [&](const std::pair<std::string, std::string>& header) {
-		transfer(header.first.c_str(), header.first.length());
-		transfer(": ", 2);
-		transfer(header.second.c_str(), header.second.length());
-		transfer("\r\n", 2);
-	});
+	std::for_each(
+		m_headers.begin(),
+		m_headers.end(),
+		[&](const std::pair<std::string, std::string>& header) {
+			transfer(header.first.c_str(), header.first.length());
+			transfer(": ", 2);
+			transfer(header.second.c_str(), header.second.length());
+			transfer("\r\n", 2);
+		}
+	);
 	transfer("\r\n", 2);
 	m_headers.clear();
 	m_headers_allowed = false; // no more headers

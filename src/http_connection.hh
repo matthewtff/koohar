@@ -66,6 +66,13 @@ private:
 	void transferStatic (Response& Res);
 
 private:
+
+	/**
+	 * If size of static file large then send it partially.
+	 */
+	static const unsigned int MaxStaticSize = 16777216; // 16 MB
+
+private:
 	boost::asio::ip::tcp::socket m_socket;
 	std::string m_answer;
 	char m_request_buffer[MaxRequestSize];

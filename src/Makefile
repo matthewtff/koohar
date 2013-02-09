@@ -1,8 +1,8 @@
 #CC=g++
 CC=clang++
 
-#CFLAGS=-c -std=c++0x -g -ggdb -stdlib=libc++ -fPIC -D_DEBUG
-CFLAGS=-c -std=c++0x -O2 -stdlib=libc++ -fPIC -g
+#CFLAGS=-c -std=c++0x -g -ggdb -stdlib=libc++ -fPIC
+CFLAGS=-c -std=c++0x -O2 -stdlib=libc++ -fPIC
 
 WARNINGS=-Wall -Wextra -Woverloaded-virtual
 LIBS=-lpthread

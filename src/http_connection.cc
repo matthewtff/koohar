@@ -5,6 +5,8 @@
 #include "response.hh"
 #include "file.hh"
 
+#include <sstream>
+
 #include <iostream>
 
 using boost::asio::ip::tcp;
@@ -113,10 +115,10 @@ HttpConnection::HttpConnection (boost::asio::io_service& IoService,
 void HttpConnection::handleRead (const boost::system::error_code& Error,
 	size_t BytesTransferred)
 {
-	if (Error)
-		std::cout << "HttpConnection[read_error] : " << Error.message()
-			<< std::endl;
-	else {
+	if (Error) {
+		/*std::cout << "HttpConnection[read_error] : " << Error.message()
+			<< std::endl;*/
+	} else {
 		Response res(shared_from_this());
 
 		if (!m_request.update(m_request_buffer, BytesTransferred)) {
@@ -136,8 +138,8 @@ void HttpConnection::handleWrite (const boost::system::error_code& Error,
 	size_t BytesTransferred)
 {
 	if (Error) {
-		std::cout << "HttpConnection[write_error] : " << Error.message()
-			<< std::endl;
+		/*std::cout << "HttpConnection[write_error] : " << Error.message()
+			<< std::endl;*/
 	}
 	else if (BytesTransferred == 0) {
 		std::cout << "HttpConnection[write_error] : transferred 0 bytes"
@@ -156,6 +158,12 @@ void HttpConnection::transferStatic (Response& Res)
 	std::string file_name = static_dir.empty() ? "." : static_dir;
 	file_name.append(m_request.uri());
 
+	if (File::isDirectory(file_name.c_str())) {
+		auto error_page = getErrorPage(400);
+		error_page.empty() ? Res.writeHead(400) : Res.redirect(error_page);
+		Res.end();
+	}
+
 	File static_file(file_name);
 
 	bool vulnerability = (file_name.find("..") != file_name.npos)
@@ -166,9 +174,9 @@ void HttpConnection::transferStatic (Response& Res)
 		std::cout << "file not found : " << file_name << std::endl;
 		std::cout << "error: " << strerror(errno) << std::endl;
 #endif /* _DEBUG */
-		Res.writeHead(404);
-		Res.end("<html><body><h1>kooher</h1><h2>Page not found</h2>"
-			"</body></html>");
+		std::string error_page = getErrorPage(404);
+		error_page.empty() ? Res.writeHead(404) : Res.redirect(error_page);
+		Res.end();
 		return;
 	}
 
@@ -177,7 +185,59 @@ void HttpConnection::transferStatic (Response& Res)
 	std::string mime = m_mime_types[file_name.substr(file_name.length() - 3, 3)];
 	Res.header("Content-Type", mime);
 
-	Res.writeHead(200);
+
+	unsigned long shift = 0;
+	unsigned long size = 0;
+	// Check if header "Range: bytes=xxx-yyy" set up.
+	if (!m_request.header("range").empty()
+		|| static_file.getSize() > MaxStaticSize)
+	{
+		std::string range_header = m_request.header("range");
+		if (!range_header.empty()) {
+			const std::size_t eq_pos = range_header.find("=");
+			const std::size_t sep_pos = range_header.find("-");
+			if (eq_pos == range_header.npos || sep_pos == range_header.npos
+				|| sep_pos < eq_pos)
+			{ // Something really wierd with range.
+				std::string error_page = getErrorPage(416);
+				error_page.empty()
+					? Res.writeHead(416)
+					: Res.redirect(error_page);
+				Res.end();
+				return;
+			}
+			std::string start = range_header.substr(eq_pos + 1,
+				sep_pos - eq_pos - 1);
+			std::string end = range_header.substr(sep_pos + 1,
+				range_header.length() - sep_pos);
+			if (start.empty()) {
+				size = std::atol(end.c_str());
+				shift = static_file.getSize() - size;
+			} else {
+				shift = std::atol(start.c_str());
+				size = end.empty()
+					? (static_file.getSize() - shift)
+					: (std::atol(end.c_str()) - shift);
+			}
+			if (shift + size > static_file.getSize()) {
+				std::string error_page = getErrorPage(416);
+				error_page.empty()
+					? Res.writeHead(416)
+					: Res.redirect(error_page);
+				Res.end();
+				return;
+			}
+		}
+		size = size ? size : static_file.getSize();
+		size = size > MaxStaticSize ? MaxStaticSize : size;
+		Res.writeHead(206);
+		std::stringstream range;
+		range << "bytes " << shift << "-" << (size + shift - 1)
+			<< "/" << static_file.getSize();
+		Res.header("Content-Range", range.str().c_str());
+	} else
+		Res.writeHead(200);
+
 	Res.sendFile(static_file.getHandle(), static_file.getSize(), 0);
 	Res.end();
 }

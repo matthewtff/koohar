@@ -65,6 +65,8 @@ public:
 	static int read (Handle Hndl, void* Buffer, size_t Length);
 	static int write (Handle Hndl, const void* Buffer, size_t Length);
 
+	static bool isDirectory (const char* Path);
+
 private:
 	void getInfo ();
 	void createTemp ();
@@ -78,6 +80,6 @@ private:
 	
 }; // class File
 
-}; // namespace koohar
+} // namespace koohar
 
 #endif // koohar_file_hh
