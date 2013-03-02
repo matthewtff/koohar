@@ -121,6 +121,7 @@ void HttpConnection::handleRead (const boost::system::error_code& Error,
 	} else {
 		Response res(shared_from_this());
 
+		res.header("Server", "koohar.app");
 		if (!m_request.update(m_request_buffer, BytesTransferred)) {
 			res.writeHead(m_request.errorCode());
 			res.end();
@@ -181,7 +182,6 @@ void HttpConnection::transferStatic (Response& Res)
 	}
 
 	Res.header("Connection", "Close");
-	Res.header("Server", "koohar.app");
 	std::string mime = m_mime_types[file_name.substr(file_name.length() - 3, 3)];
 	Res.header("Content-Type", mime);
 
@@ -235,8 +235,12 @@ void HttpConnection::transferStatic (Response& Res)
 		range << "bytes " << shift << "-" << (size + shift - 1)
 			<< "/" << static_file.getSize();
 		Res.header("Content-Range", range.str().c_str());
-	} else
+	} else {
+		std::stringstream length;
+		length << static_file.getSize();
+		Res.header("Content-Length", length.str());
 		Res.writeHead(200);
+	}
 
 	Res.sendFile(static_file.getHandle(), static_file.getSize(), 0);
 	Res.end();

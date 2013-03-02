@@ -22,7 +22,7 @@ class HttpConnection :
 	public boost::enable_shared_from_this< HttpConnection >
 {
 public:
-	enum { MaxRequestSize = 65536 };
+	static const unsigned int MaxRequestSize = 65536; // 64KB
 
 	typedef boost::shared_ptr< HttpConnection > Pointer;
 
@@ -82,7 +82,8 @@ private:
 	DataBuffers m_buffers;
 	int m_writing_operations;
 	bool m_close_socket;
-};
+
+}; // class HttpConnection
 
 } // namespace koohar
 

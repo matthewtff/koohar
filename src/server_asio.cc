@@ -9,6 +9,17 @@ namespace koohar {
 ServerAsio::ServerAsio (unsigned short Port) : m_port(Port),
 	m_acceptor(m_io_service, tcp::endpoint(tcp::v4(), Port))
 {
+	/*tcp::endpoint ep(tcp::v4(), Port);
+	try {
+		m_acceptor.open(ep.protocol());
+		m_acceptor.set_option(tcp::acceptor::reuse_address(true));
+		std::cout << "Binding..." << std::endl;
+		m_acceptor.bind(ep);
+		std::cout << "Binded!" << std::endl;
+	} catch (boost::exception& e) {
+		std::cout << "Error binding to address..." << std::endl;
+		throw;
+	}*/
 	accept();
 }
 
@@ -25,12 +36,16 @@ void ServerAsio::accept ()
 	HttpConnection::Pointer new_connection =
 		HttpConnection::create(m_acceptor.get_io_service(),
 			m_user_call_function, dynamic_cast<ServerConfig*>(this));
-	
-	m_acceptor.async_accept(new_connection->socket(),
-		boost::bind(&ServerAsio::handleAccept, this, new_connection,
-			boost::asio::placeholders::error
-		)
-	);
+
+	try {
+		m_acceptor.async_accept(new_connection->socket(),
+			boost::bind(&ServerAsio::handleAccept, this, new_connection,
+				boost::asio::placeholders::error
+			)
+		);
+	} catch (boost::exception& e) {
+		std::cerr << "Error accepting..." << std::endl;
+	}
 }
 
 void ServerAsio::handleAccept (HttpConnection::Pointer NewConnection,
