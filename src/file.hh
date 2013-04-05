@@ -48,8 +48,8 @@ public:
 
 public:
 	File ();
-	File (File::Handle Hndl);
-	File (const std::string& FileName);
+	explicit File (File::Handle Hndl);
+	explicit File (const std::string& FileName);
 	~File ();
 	bool open (AccessType Mode);
 	void close ();

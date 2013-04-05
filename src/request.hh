@@ -7,7 +7,6 @@
 
 namespace koohar {
 
-
 class Request : public HttpParser {
 public:
 	void session (StringMap* Session) { m_session = Session; }

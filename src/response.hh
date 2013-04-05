@@ -20,7 +20,7 @@ public:
 	static StateMap States;
 
 public:
-	Response(HttpConnection::Pointer Connection);
+	explicit Response(HttpConnection::Pointer Connection);
 
 	/**
 	 * Sets and sends appropriate http status to client.

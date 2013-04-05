@@ -11,7 +11,7 @@ class Date {
 public:
 
 	Date ();
-	Date (const std::string& DateString);
+	explicit Date (const std::string& DateString);
 
 	std::string toString () const;
 

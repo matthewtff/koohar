@@ -7,7 +7,8 @@ namespace koohar {
 
 class FileMapping {
 public:
-	FileMapping (const File::Handle& FH, const size_t PageSize = 65536); // 64KB
+	explicit FileMapping (const File::Handle& FH,
+		const size_t PageSize = 65536); // 64KB
 	~FileMapping ();
 	char* map (const size_t Size, const size_t offset);
 	void unMap ();
