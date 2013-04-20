@@ -40,6 +40,7 @@ set ( koohar_src
 	src/webpage.cc
 	src/webui.cc
 	src/xmlobjects.cc
+	src/json.cc
 )
 
 add_library ( koohar ${koohar_src} )

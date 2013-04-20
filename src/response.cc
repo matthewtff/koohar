@@ -112,6 +112,19 @@ void Response::redirect(const std::string& Url)
 	header("Location", Url); // Redirecting with HTTP header
 }
 
+void Response::sendJSON(const JSON::Object& Obj)
+{
+	writeHead(200);
+	header("Content-Type", "application/json");
+	end(Obj.toString());
+}
+
+void Response::badRequest()
+{
+	writeHead(400);
+	end();
+}
+
 Response::StateMap Response::initStates ()
 {
 	StateMap States;

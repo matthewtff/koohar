@@ -6,6 +6,7 @@
 
 #include "http_connection.hh"
 #include "file.hh"
+#include "json.hh"
 
 namespace koohar {
 
@@ -67,6 +68,10 @@ public:
 	 * forget to close connection using end().
 	 */
 	void redirect (const std::string& Url);
+
+	void sendJSON (const JSON::Object& Obj);
+
+	void badRequest ();
 
 	/**
 	 * States are very often used, so no need to create(allocate) that much

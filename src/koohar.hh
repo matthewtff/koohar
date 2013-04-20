@@ -13,5 +13,6 @@
 #include "file.hh"
 #include "request.hh"
 #include "webui.hh"
+#include "json.hh"
 
 #endif // koohar_hh
