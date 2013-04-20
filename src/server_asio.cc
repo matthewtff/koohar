@@ -9,17 +9,6 @@ namespace koohar {
 ServerAsio::ServerAsio (unsigned short Port) : m_port(Port),
 	m_acceptor(m_io_service, tcp::endpoint(tcp::v4(), Port))
 {
-	/*tcp::endpoint ep(tcp::v4(), Port);
-	try {
-		m_acceptor.open(ep.protocol());
-		m_acceptor.set_option(tcp::acceptor::reuse_address(true));
-		std::cout << "Binding..." << std::endl;
-		m_acceptor.bind(ep);
-		std::cout << "Binded!" << std::endl;
-	} catch (boost::exception& e) {
-		std::cout << "Error binding to address..." << std::endl;
-		throw;
-	}*/
 	accept();
 }
 
