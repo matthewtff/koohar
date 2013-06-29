@@ -2,6 +2,8 @@
 
 #include <boost/bind.hpp>
 
+#include <iostream>
+
 using boost::asio::ip::tcp;
 
 namespace koohar {

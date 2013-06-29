@@ -5,7 +5,7 @@
 #include <string>
 #include <cstddef>
 #include <sstream>
-#include <locale>
+#include <cctype>
 
 namespace koohar {
 

@@ -196,7 +196,7 @@ bool File::isDirectory (const char* Path)
 #ifdef _WIN32
 	DWORD file_attributes = GetFileAttributes(Path);
 	if (file_attributes != INVALID_FILE_ATTRIBUTES)
-		return static_cast<bool>(file_attributes & FILE_ATTRIBUTE_DIRECTORY);
+		return !!(file_attributes & FILE_ATTRIBUTE_DIRECTORY);
 #else /* _WIN32 */
 	struct stat info;
 	if (stat(Path, &info) == 0)
