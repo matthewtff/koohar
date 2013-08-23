@@ -12,8 +12,8 @@
 
 namespace koohar {
 
-FileMapping::FileMapping (const File::Handle& FH, size_t PageSize) :
-	m_file(FH), m_page_size(PageSize), m_address(0), m_mapped(false)
+FileMapping::FileMapping (const File::Handle& FH) :
+	m_file(FH), m_address(0), m_mapped(false)
 {}
 
 FileMapping::~FileMapping ()
@@ -26,8 +26,6 @@ char* FileMapping::map (const size_t Size, const size_t Offset)
 {
 	size_t align_size = Offset;
 	size_t offset = Offset;
-	/*size_t offset = m_page_size * (Offset / m_page_size);
-	align_size -= offset;*/
 	m_size = Size + align_size;
 #ifdef _WIN32
 
