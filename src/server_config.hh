@@ -13,39 +13,39 @@ class ServerConfig {
 
 public:
 
-	enum Option {
-		SET_STATIC_DIR,
-		SET_STATIC_URL
-	};
+  enum Option {
+    SET_STATIC_DIR,
+    SET_STATIC_URL
+  };
 
 public:
 
-	void config (Option Key, const std::string& Value);
+  void config (const Option Key, const std::string& Value);
 
-	void setStaticDir (const std::string& Directory);
-	void setStaticUrl (const std::string& Url);
-	void setUseSSL (bool UseSSL);
+  inline void setStaticDir (const std::string& Directory);
+  void setStaticUrl (const std::string& Url);
+  void setUseSSL (const bool UseSSL);
 
-	bool isStaticUrl (const Request& Req);
-	std::string getStaticDir (void) const;
-	bool getUseSSL () const;
+  bool isStaticUrl (const Request& Req);
+  std::string getStaticDir () const;
+  bool getUseSSL () const;
 
-	void load (const std::string& FileName);
+  void load (const std::string& FileName);
 
-	std::string getErrorPage (const unsigned short Code) const;
-
-private:
-
-	typedef std::list<std::string> StringList;
-
-	typedef std::map<unsigned short, std::string> StringMap;
+  std::string getErrorPage (const unsigned short Code) const;
 
 private:
 
-	std::string m_static_dir;
-	StringList m_static_urls;
-	StringMap m_error_pages;
-	bool m_use_ssl;
+  typedef std::list<std::string> StringList;
+
+  typedef std::map<unsigned short, std::string> StringMap;
+
+private:
+
+  std::string m_static_dir;
+  StringList m_static_urls;
+  StringMap m_error_pages;
+  bool m_use_ssl;
 
 }; // class ServerConfig
 

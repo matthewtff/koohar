@@ -12,28 +12,28 @@ class ServerAsio : public ServerConfig {
 public:
 
 public:
-	ServerAsio (unsigned short Port = 80);
+  ServerAsio (unsigned short Port = 80);
 
-	virtual ~ServerAsio () {}
+  virtual ~ServerAsio () {}
 
-	void listen (HttpConnection::UserFunc UserCallFunction);
+  void listen (HttpConnection::UserFunc UserCallFunction);
 
-	unsigned short port () const { return m_port; }
+  unsigned short port () const { return m_port; }
 
-	void stop () { m_io_service.stop(); }
-
-private:
-	void accept ();
-	void handleAccept (HttpConnection::Pointer NewConnection,
-		const boost::system::error_code& Error);
+  void stop () { m_io_service.stop(); }
 
 private:
-	unsigned short m_port;
-	boost::asio::io_service m_io_service;
-	boost::asio::ip::tcp::acceptor m_acceptor;
+  void accept ();
+  void handleAccept (HttpConnection::Pointer NewConnection,
+    const boost::system::error_code& Error);
 
-	HttpConnection::UserFunc m_user_call_function;
-	ServerConfig m_server_config;
+private:
+  unsigned short m_port;
+  boost::asio::io_service m_io_service;
+  boost::asio::ip::tcp::acceptor m_acceptor;
+
+  HttpConnection::UserFunc m_user_call_function;
+  ServerConfig m_server_config;
 }; // class ServerAsio
 
 } // namespace koohar

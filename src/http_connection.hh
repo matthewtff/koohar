@@ -18,70 +18,76 @@ namespace koohar {
 class Response;
 
 class HttpConnection :
-	public ServerConfig,
-	public boost::enable_shared_from_this< HttpConnection >
+  public ServerConfig,
+  public boost::enable_shared_from_this< HttpConnection >
 {
 public:
-	static const unsigned int MaxRequestSize = 65536; // 64KB
+  static const unsigned int MaxRequestSize = 65536; // 64KB
 
-	typedef boost::shared_ptr< HttpConnection > Pointer;
+  typedef boost::shared_ptr< HttpConnection > Pointer;
 
-	typedef std::function< void (koohar::Request&, koohar::Response&) >
-		UserFunc;
+  typedef std::function< void (koohar::Request&, koohar::Response&) >
+    UserFunc;
 
-	typedef std::list< std::shared_ptr< const char > > DataBuffers;
+  typedef std::list< std::shared_ptr< const char > > DataBuffers;
 
-	typedef std::map< std::string, std::string > StringMap;
-
-public:
-	static Pointer create (boost::asio::io_service& IoService,
-		UserFunc UserCallFunction, const ServerConfig* Config);
-
-	boost::asio::ip::tcp::socket& socket ();
-
-	void start ();
-
-	void write (const char* Data, size_t Size);
-
-	void close ();
-
-	void setUserCallFunction (UserFunc UserCallFunction);
-
-	static StringMap initMimeTypes ();
+  typedef std::map< std::string, std::string > StringMap;
 
 public:
+  static Pointer create (boost::asio::io_service& IoService,
+                         UserFunc UserCallFunction,
+                         const ServerConfig& Config);
 
-	static StringMap m_mime_types;
+  boost::asio::ip::tcp::socket& socket ();
 
-private:
-	HttpConnection (boost::asio::io_service& IoService,
-		UserFunc UserCallFunction, const ServerConfig* Config);
+  void start ();
 
-	void handleRead (const boost::system::error_code& Error,
-		size_t BytesTransferred);
+  void write (const char* Data, const std::size_t Size);
 
-	void handleWrite (const boost::system::error_code& Error,
-		size_t BytesTransferred);
+  void close ();
 
-	void transferStatic (Response& Res);
+  void setUserFunction (UserFunc UserCallFunction);
 
-private:
+public:
 
-	/**
-	 * If size of static file large then send it partially.
-	 */
-	static const unsigned int MaxStaticSize = 16777216; // 16 MB
+  static StringMap m_mime_types;
 
 private:
-	boost::asio::ip::tcp::socket m_socket;
-	std::string m_answer;
-	char m_request_buffer[MaxRequestSize];
+  HttpConnection (boost::asio::io_service& IoService,
+                  UserFunc UserCallFunction,
+                  const ServerConfig& Config);
 
-	Request m_request;
-	UserFunc m_user_call_function;
-	DataBuffers m_buffers;
-	int m_writing_operations;
-	bool m_close_socket;
+  void handleRead (const boost::system::error_code& Error,
+                   const std::size_t BytesTransferred);
+
+  void handleWrite (const boost::system::error_code& Error,
+                    const std::size_t BytesTransferred);
+
+  void transferStatic (Response& Res);
+
+  bool isVulnerable (const std::string& FileName);
+
+  void handleError (Response& Res, const unsigned short Code);
+
+  std::string mimeFromName (const std::string& FileName);
+
+private:
+
+  /**
+   * If size of static file large then this send it partially.
+   */
+  static const unsigned int MaxStaticSize = 16777216; // 16 MB
+
+private:
+  boost::asio::ip::tcp::socket m_socket;
+  std::string m_answer;
+  char m_request_buffer[MaxRequestSize];
+
+  Request m_request;
+  UserFunc m_user_call_function;
+  DataBuffers m_buffers;
+  int m_writing_operations;
+  bool m_close_socket;
 
 }; // class HttpConnection
 

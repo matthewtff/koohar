@@ -13,7 +13,6 @@ public:
 	typedef std::map<std::string, std::string> StringMap;
 
 public:
-	UriParser();
 	bool parse (const std::string& uri);
 	std::string scheme () const { return m_scheme; }
 	std::string authority () const { return m_authority; }

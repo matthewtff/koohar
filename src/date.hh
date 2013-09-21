@@ -10,16 +10,16 @@ class Date {
 
 public:
 
-	Date ();
-	explicit Date (const std::string& DateString);
+  Date ();
+  explicit Date (const std::string& DateString);
 
-	std::string toString () const;
+  std::string toString () const;
 
-	void parse (const std::string& DateString);
+  void parse (const std::string& DateString);
 
 private:
 
-	boost::local_time::local_date_time m_date;
+  boost::local_time::local_date_time m_date;
 
 }; // class Date
 

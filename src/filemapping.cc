@@ -29,15 +29,38 @@ char* FileMapping::map (const size_t Size, const size_t Offset)
 	m_size = Size + align_size;
 #ifdef _WIN32
 
-	if ((m_file_map = CreateFileMapping(m_file, NULL, PAGE_READONLY, 0, m_size, NULL)) != NULL)
-		if ((m_address = static_cast<char*>(MapViewOfFile(m_file_map, FILE_MAP_READ, 0, offset, m_size))) == NULL) {
+  m_file_map = CreateFileMapping(m_file,
+                                 NULL,
+                                 PAGE_READONLY,
+                                 0,
+                                 m_size,
+                                 NULL);
+
+  const bool created_map = m_file_map != NULL;
+
+	if (created_map) {
+    m_address = static_cast<char*>(MapViewOfFile(m_file_map,
+                                                 FILE_MAP_READ,
+                                                 0,
+                                                 offset,
+                                                 m_size));
+    const bool failed_view_of_file = m_address == NULL;
+		if (failed_view_of_file) {
 			CloseHandle(m_file_map);
 			return 0;
 		}
+  }
 
 #else /* _WIN32 */
 
-	if ((m_address = static_cast<char*>(mmap(0, m_size, PROT_READ, MAP_PRIVATE, m_file, offset))) == MAP_FAILED)
+  m_address = static_cast<char*>(mmap(0,
+                                 m_size,
+                                 PROT_READ,
+                                 MAP_PRIVATE,
+                                 m_file,
+                                 offset));
+  const bool failed_map = m_address == MAP_FAILED;
+	if (failed_map)
 		return 0;
 
 #endif /* _WIN32 */
