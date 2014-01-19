@@ -25,11 +25,7 @@ void ServerConfig::load (const std::string& FileName) {
   const std::string contents((std::istreambuf_iterator<char>(f)),
                              std::istreambuf_iterator<char>());
 
-  JSON::Object config;
-  if (contents.size() != config.parse(contents)) {
-    DLOG() << "Error parsing json info.";
-    return;
-  }
+  JSON::Object config = JSON::parse(contents);
 
   if (config["public_dir"].type() == JSON::Type::String)
     setStaticDir(config["public_dir"].getString());
