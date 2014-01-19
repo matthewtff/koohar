@@ -12,21 +12,22 @@ namespace koohar {
 
 namespace JSON {
 
+enum class Type {
+  Undefined,
+  Boolean,
+  Integer,
+  Float,
+  String,
+  Array,
+  Collection
+};
+
 class Object {
 public:
-  enum Type {
-    Undefined,
-    Boolean,
-    Integer,
-    Float,
-    String,
-    Array,
-    Collection
-  }; // enum Type
 
   Object ()
       : m_state(OnValue),
-      m_type(Undefined),
+      m_type(Type::Undefined),
       m_boolean(false),
       m_integer(0L),
       m_float(.0)
@@ -34,7 +35,7 @@ public:
 
   explicit Object(const bool Bool)
       : m_state(OnSuccess),
-      m_type(Boolean),
+      m_type(Type::Boolean),
       m_boolean(Bool),
       m_integer(0L),
       m_float(.0)
@@ -42,7 +43,7 @@ public:
 
   explicit Object(const long Int)
       : m_state(OnSuccess),
-      m_type(Integer),
+      m_type(Type::Integer),
       m_boolean(false),
       m_integer(Int),
       m_float(.0)
@@ -50,7 +51,7 @@ public:
 
   explicit Object(const double Floating)
       : m_state(OnSuccess),
-      m_type(Float),
+      m_type(Type::Float),
       m_boolean(false),
       m_integer(0L),
       m_float(Floating)
@@ -58,7 +59,7 @@ public:
 
   explicit Object(const std::string& Str)
       : m_state(OnSuccess),
-      m_type(String),
+      m_type(Type::String),
       m_boolean(false),
       m_integer(0L),
       m_float(.0),
@@ -114,7 +115,9 @@ public:
   bool remove (const std::string& Name);
   Object& operator[](const std::string& Name);
 
-  bool empty () const { return m_state == OnValue && m_type == Undefined; }
+  bool empty () const {
+    return m_state == OnValue && m_type == Type::Undefined;
+  }
   std::string toString() const;
   std::size_t parse(const std::string &Stream);
   bool errorParsing () const { return m_state != OnSuccess; }
@@ -139,7 +142,7 @@ private:
 
 private:
   void checkUndefined (const Type SetType) {
-    if (m_type == Undefined)
+    if (m_type == Type::Undefined)
       m_type = SetType;
   }
   template <typename Trivial>
@@ -198,7 +201,7 @@ Object& Object::operator = (const Trivial Value)
    return *this;
 }
 
-std::string strigify(const Object& Obj);
+std::string strigify(const Object& Obj) { return Obj.toString(); }
 Object parse(const std::string& Stream);
 
 } // namespace JSON

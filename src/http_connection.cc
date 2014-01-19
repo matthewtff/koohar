@@ -1,14 +1,12 @@
 #include "http_connection.hh"
 
-#include <boost/bind.hpp>
-
-#include "response.hh"
-#include "file.hh"
-#include "utils.hh"
-
 #include <sstream>
 
-#include <iostream>
+#include <boost/bind.hpp>
+
+#include "base/file.hh"
+#include "base/utils.hh"
+#include "response.hh"
 
 using boost::asio::ip::tcp;
 
@@ -55,31 +53,23 @@ StringMap HttpConnection::m_mime_types = initMimeTypes();
 HttpConnection::Pointer HttpConnection::create (
     boost::asio::io_service& IoService,
     UserFunc UserCallFunction,
-    const ServerConfig& Config)
-{
-  return Pointer(new HttpConnection(IoService,
-                                    UserCallFunction,
-                                    Config));
+    const ServerConfig& Config) {
+  return Pointer(new HttpConnection(IoService, UserCallFunction, Config));
 }
 
-tcp::socket& HttpConnection::socket ()
-{
+tcp::socket& HttpConnection::socket () {
   return m_socket;
 }
 
-void HttpConnection::start ()
-{
+void HttpConnection::start () {
   m_socket.async_read_some (
-    boost::asio::buffer(m_request_buffer, MaxRequestSize),
-    boost::bind(&HttpConnection::handleRead, shared_from_this(),
-      boost::asio::placeholders::error,
-      boost::asio::placeholders::bytes_transferred
-    )
-  );
+      boost::asio::buffer(m_request_buffer, MaxRequestSize),
+      boost::bind(&HttpConnection::handleRead, shared_from_this(),
+          boost::asio::placeholders::error,
+          boost::asio::placeholders::bytes_transferred));
 }
 
-void HttpConnection::write (const char* Data, std::size_t Size)
-{
+void HttpConnection::write (const char* Data, std::size_t Size) {
   if (!Data || !Size)
     return;
 
@@ -89,8 +79,7 @@ void HttpConnection::write (const char* Data, std::size_t Size)
 
   boost::asio::async_write(
       m_socket,
-      boost::asio::buffer(buffer.get(),
-                          Size),
+      boost::asio::buffer(buffer.get(), Size),
       boost::bind(&HttpConnection::handleWrite,
                   shared_from_this(),
                   boost::asio::placeholders::error,
@@ -101,13 +90,7 @@ void HttpConnection::write (const char* Data, std::size_t Size)
   ++m_writing_operations;
 }
 
-void HttpConnection::close ()
-{
-  m_close_socket = true;
-}
-
-void HttpConnection::setUserFunction (UserFunc UserCallFunction)
-{
+void HttpConnection::setUserFunction (UserFunc UserCallFunction) {
   m_user_call_function = UserCallFunction;
 }
 
@@ -117,15 +100,14 @@ HttpConnection::HttpConnection (boost::asio::io_service& IoService,
                                 UserFunc UserCallFunction,
                                 const ServerConfig& Config)
     : ServerConfig(Config),
-    m_socket(IoService),
-    m_user_call_function(UserCallFunction),
-    m_writing_operations(0),
-    m_close_socket(false)
+      m_socket(IoService),
+      m_user_call_function(UserCallFunction),
+      m_writing_operations(0),
+      m_close_socket(false)
 {}
 
 void HttpConnection::handleRead (const boost::system::error_code& Error,
-                                 const std::size_t BytesTransferred)
-{
+                                 const std::size_t BytesTransferred) {
   if (Error) 
     return;
 
@@ -137,20 +119,17 @@ void HttpConnection::handleRead (const boost::system::error_code& Error,
     res.end();
   } else if (ServerConfig::isStaticUrl(m_request)) {
     transferStatic(res);
-  } else if (m_user_call_function)
+  } else if (m_user_call_function) {
     m_user_call_function(m_request, res);
-  else
-    DLOG() << "HttpConnection[callback_error] : "
-      "Callback was not set" << std::endl;
+  } else {
+    DLOG() << "HttpConnection[callback_error] : Callback was not set";
+  }
 }
 
 void HttpConnection::handleWrite (const boost::system::error_code& Error,
-                                  const std::size_t BytesTransferred)
-{
-  if (!Error && BytesTransferred == 0) {
-    DLOG() << "HttpConnection[write_error] : transferred 0 bytes"
-      << std::endl;
-  }
+                                  const std::size_t BytesTransferred) {
+  if (!Error && BytesTransferred == 0)
+    DLOG() << "HttpConnection[write_error] : transferred 0 bytes";
 
   if (m_writing_operations > 0)
     --m_writing_operations;
@@ -158,9 +137,8 @@ void HttpConnection::handleWrite (const boost::system::error_code& Error,
     m_socket.close();
 }
 
-void HttpConnection::transferStatic (Response& Res)
-{
-  std::string static_dir = getStaticDir();
+void HttpConnection::transferStatic (Response& Res) {
+  const std::string static_dir = getStaticDir();
   std::string file_name = static_dir.empty() ? "." : static_dir;
   file_name.append(m_request.uri());
 
@@ -169,7 +147,7 @@ void HttpConnection::transferStatic (Response& Res)
 
   File static_file(file_name);
 
-  if (isVulnerable(file_name) || !static_file.open(File::ReadOnly))
+  if (isVulnerable(file_name) || !static_file.open(File::AccessType::ReadOnly))
     return handleError(Res, 404);
 
   Res.header("Connection", "Close");
@@ -188,17 +166,15 @@ void HttpConnection::transferStatic (Response& Res)
       if (eq_pos == range_header.npos || sep_pos == range_header.npos
         || sep_pos < eq_pos)
       { // Something really wierd with range.
-        std::string error_page = getErrorPage(416);
-        error_page.empty()
-          ? Res.writeHead(416)
-          : Res.redirect(error_page);
+        const std::string error_page = getErrorPage(416);
+        error_page.empty() ? Res.writeHead(416) : Res.redirect(error_page);
         Res.end();
         return;
       }
-      std::string start = range_header.substr(eq_pos + 1,
-        sep_pos - eq_pos - 1);
-      std::string end = range_header.substr(sep_pos + 1,
-        range_header.length() - sep_pos);
+      const std::string start =
+          range_header.substr(eq_pos + 1, sep_pos - eq_pos - 1);
+      const std::string end =
+          range_header.substr(sep_pos + 1, range_header.length() - sep_pos);
       if (start.empty()) {
         size = std::atol(end.c_str());
         shift = static_file.getSize() - size;
@@ -209,10 +185,8 @@ void HttpConnection::transferStatic (Response& Res)
           : (std::atol(end.c_str()) - shift);
       }
       if (shift + size > static_file.getSize()) {
-        std::string error_page = getErrorPage(416);
-        error_page.empty()
-          ? Res.writeHead(416)
-          : Res.redirect(error_page);
+        const std::string error_page = getErrorPage(416);
+        error_page.empty() ? Res.writeHead(416) : Res.redirect(error_page);
         Res.end();
         return;
       }
@@ -235,20 +209,18 @@ void HttpConnection::transferStatic (Response& Res)
   Res.end();
 }
 
-bool HttpConnection::isVulnerable (const std::string& FileName)
-{
+bool HttpConnection::isVulnerable (const std::string& FileName) {
   return FileName.find("..") != FileName.npos || FileName[0] == '/';
 }
 
-void HttpConnection::handleError (Response& Res, const unsigned short Code)
-{
-    std::string error_page = getErrorPage(Code);
+void HttpConnection::handleError (Response& Res, const unsigned short Code) {
+    const std::string error_page = getErrorPage(Code);
     error_page.empty() ? Res.writeHead(Code) : Res.redirect(error_page);
     Res.end();
 }
 
-std::string HttpConnection::mimeFromName (const std::string& FileName)
-{
+std::string HttpConnection::mimeFromName (const std::string& FileName) {
+  //TODO(matthewtff): Use rfind to locate a dot and get correct extension.
   static const std::size_t mime_size = 3;
   std::string mime_substring =
     FileName.substr(FileName.length() - mime_size, mime_size);

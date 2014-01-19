@@ -1,16 +1,21 @@
-#include "utils.hh"
+#include "base/utils.hh"
 
-#ifndef _DEBUG
+#ifdef NDEBUG
 
 #include <iostream>
+#include <cassert>
 
-#else // _DEBUG
+#else // NDEBUG
 
 #include <ostream>
 
-#endif // _DEBUG
+#endif // NDEBUG
+
+#ifndef NDEBUG
 
 class DummyOstream : public std::ostream {};
+
+#endif // !NDEBUG
 
 namespace koohar {
 
@@ -26,6 +31,14 @@ std::ostream& DLOG()
   return dummy;
 
 #endif // _DEBUG
+}
+
+void NOTREACHED() {
+#ifdef NDEBUG
+
+  std::assert(false);
+
+#endif
 }
 
 } // namespace koohar

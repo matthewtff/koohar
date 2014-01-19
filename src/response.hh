@@ -1,12 +1,13 @@
 #ifndef koohar_response_hh
 #define koohar_response_hh
 
-#include <string>
 #include <map>
+#include <string>
 
+#include "base/file.hh"
+#include "base/json.hh"
+#include "base/utils.hh"
 #include "http_connection.hh"
-#include "file.hh"
-#include "json.hh"
 
 namespace koohar {
 
@@ -89,6 +90,12 @@ private:
    * private method.
    */
   bool transfer(const void* Buffer, const off_t BufferSize);
+
+  template <size_t N>
+  bool transferString(const char (&Str) [N]) {
+    return transfer(reinterpret_cast<const void*>(Str),
+                    static_cast<off_t>(string_length(Str)));
+  }
 
   /**
    * This method handle '\n\r' sending after headers part and setting

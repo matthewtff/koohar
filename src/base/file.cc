@@ -1,31 +1,29 @@
-#ifdef _WIN32
+#include "base/file.hh"
 
-#else /* _WIN32 */
+#ifndef _WIN32
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <errno.h>
+#include <cerrno>
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
 
 #endif /* _WIN32 */
 
-#include "file.hh"
-#include "utils.hh"
+#include "base/utils.hh"
 
 namespace koohar {
 
 File::File () : m_size(0), m_time(0), m_opened(false)
 {}
 
-File::File (File::Handle Hndl) : m_file(Hndl),
-  m_size(0), m_time(0), m_opened(true)
+File::File (Handle Hndl) : m_file(Hndl), m_size(0), m_time(0), m_opened(true)
 {}
 
-File::File (const std::string& FileName) : m_fname(FileName), m_size(0),
-  m_time(0), m_opened(false)
+File::File (const std::string& FileName)
+    : m_fname(FileName), m_size(0), m_time(0), m_opened(false)
 {}
 
 File::~File ()
@@ -40,12 +38,13 @@ bool File::open (AccessType Mode)
     return true;
 #ifdef _WIN32
 
-  if ((m_file = CreateFileA(m_fname.c_str(), Mode, FILE_SHARE_READ, NULL,
-    OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)) == INVALID_HANDLE_VALUE) {
+  m_file = CreateFileA(m_fname.c_str(), Mode, FILE_SHARE_READ, NULL,
+                       OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+  if (m_file == INVALID_HANDLE_VALUE) {
 
 #else /* _WIN32 */
 
-  if ((m_file = ::open(m_fname.c_str(), Mode)) == -1) {
+  if ((m_file = ::open(m_fname.c_str(), static_cast<int>(Mode))) == -1) {
 
 #endif /* _WIN32 */
 
@@ -110,17 +109,16 @@ bool File::move (const std::string& NewFileName)
 
     DLOG() << "Unable move file " << m_fname << std::endl;
     return false;
-  } else {
-    m_fname.assign(NewFileName);
-    return true;
   }
+  m_fname.assign(NewFileName);
+  return true;
 }
 
 int File::read (void* Buffer, const size_t Length)
 {
   if (!m_opened)
     return IOError;
-  
+
   return File::read(m_file, Buffer, Length);
 }
 
@@ -128,7 +126,7 @@ int File::write (const void* Buffer, const size_t Length)
 {
   if (!m_opened)
     return IOError;
-  
+
   return File::write(m_file, Buffer, Length);
 }
 
@@ -142,17 +140,14 @@ int File::read (File::Handle Hndl, void* Buffer, const size_t Length)
                 static_cast<DWORD>(Length),
                 &return_value,
                 NULL)) {
-
+    return IOError;
+  }
 #else /* _WIN32 */
 
-  int return_value = 0;
-  return_value = ::read(Hndl, Buffer, Length);
-  if (return_value == -1) {
+  const int return_value = ::read(Hndl, Buffer, Length);
 
 #endif /* _WIN32 */
 
-    return IOError;
-  }
   return static_cast<int>(return_value);
 }
 
@@ -170,8 +165,7 @@ int File::write (File::Handle Hndl, const void* Buffer, const size_t Length)
 
 #else /* _WIN32 */
 
-  int return_value = 0;
-  return_value = ::write(Hndl, Buffer, Length);
+  const int return_value = ::write(Hndl, Buffer, Length);
   if (return_value == -1) {
 
 #endif /* _WIN32 */
@@ -179,7 +173,7 @@ int File::write (File::Handle Hndl, const void* Buffer, const size_t Length)
     DLOG() << "Error writing to file." << std::endl;
     return IOError;
   }
-  return return_value;
+  return static_cast<int>(return_value);
 }
 
 bool File::isDirectory (const char* Path)
@@ -226,12 +220,12 @@ void File::createTemp ()
 {
 #ifdef _WIN32
 
-  //TODO: For now it isn't needed, but...
+  //TODO(matthewtff): Implement.
   return;
 
 #else /* _WIN32 */
 
-  char tmp_name[9] = "./XXXXXX";
+  char tmp_name[] = "./XXXXXX";
   m_file = mkstemp(tmp_name);
   m_fname = tmp_name;
 
@@ -239,4 +233,4 @@ void File::createTemp ()
   m_opened = true;
 }
 
-}; // namespace koohar
+} // namespace koohar

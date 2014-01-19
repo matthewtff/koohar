@@ -20,7 +20,7 @@ public:
     unsigned short int m_minor;
   };
 
-  enum Method {
+  enum class Method {
     Options,
     Get,
     Head,
@@ -28,16 +28,7 @@ public:
     Put,
     Delete,
     Trace,
-    Connect,
-    ExpressionMethod
-  };
-
-  enum Error {
-    BadMethod,
-    BadUri,
-    BadHttpVersion,
-    BadHeaders,
-    BadBody
+    Connect
   };
 
 public:
@@ -52,8 +43,8 @@ public:
    * @return false on parse error, true otherwise.
    */
   bool update (const char* Data, const unsigned int Size);
-  bool isBad () const { return m_state == OnParseError; }
-  bool isComplete () const { return m_state == OnComplete; }
+  bool isBad () const { return m_state == State::OnParseError; }
+  bool isComplete () const { return m_state == State::OnComplete; }
   Method method () const { return m_method; }
   std::string uri () const { return m_uri; }
   Version version () const { return m_version; }
@@ -78,9 +69,9 @@ protected:
 
 private:
 
-  enum { MaxTokenSize = 4096 };
+  static const size_t MaxTokenSize = 4096;
 
-  enum State {
+  enum class State {
     OnMethod,
     OnUri,
     OnHttpVersion,
@@ -103,8 +94,9 @@ private:
   void parseCookies (const std::string& CookieStr);
 
 private:
-  static StateCallback m_callbacks[OnParseError];
-  static std::string m_method_strings[ExpressionMethod];
+  // Number of callbacks intentionally left blank, to statically assert it
+  // against really initialized callbacks and number of states;
+  static StateCallback m_callbacks[];
   static std::regex m_cookie_regex;
 
   State m_state;

@@ -1,14 +1,14 @@
 #ifndef koohar_http_connection_hh
 #define koohar_http_connection_hh
 
-#include <string>
-#include <memory>
 #include <list>
+#include <memory>
 #include <map>
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
+#include <string>
 
 #include <boost/asio.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "server_config.hh"
 #include "request.hh"
@@ -18,8 +18,8 @@ namespace koohar {
 class Response;
 
 class HttpConnection :
-  public ServerConfig,
-  public boost::enable_shared_from_this< HttpConnection >
+    public ServerConfig,
+    public boost::enable_shared_from_this< HttpConnection >
 {
 public:
   static const unsigned int MaxRequestSize = 65536; // 64KB
@@ -44,7 +44,7 @@ public:
 
   void write (const char* Data, const std::size_t Size);
 
-  void close ();
+  void close () { m_close_socket = true; }
 
   void setUserFunction (UserFunc UserCallFunction);
 

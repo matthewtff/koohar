@@ -1,4 +1,4 @@
-#include "filemapping.hh"
+#include "base/filemapping.hh"
 
 #ifdef _WIN32
 
@@ -12,8 +12,8 @@
 
 namespace koohar {
 
-FileMapping::FileMapping (const File::Handle& FH) :
-	m_file(FH), m_address(0), m_mapped(false)
+FileMapping::FileMapping (const File::Handle FH)
+    : m_file(FH), m_address(0), m_mapped(false)
 {}
 
 FileMapping::~FileMapping ()
@@ -24,8 +24,9 @@ FileMapping::~FileMapping ()
 
 char* FileMapping::map (const size_t Size, const size_t Offset)
 {
-	size_t align_size = Offset;
-	size_t offset = Offset;
+  // TODO(matthewtff): WTF? remove this offset cheating...
+	const size_t align_size = Offset;
+	const size_t offset = Offset;
 	m_size = Size + align_size;
 #ifdef _WIN32
 
@@ -44,8 +45,7 @@ char* FileMapping::map (const size_t Size, const size_t Offset)
                                                  0,
                                                  offset,
                                                  m_size));
-    const bool failed_view_of_file = m_address == NULL;
-		if (failed_view_of_file) {
+		if (!m_address) {
 			CloseHandle(m_file_map);
 			return 0;
 		}
@@ -53,12 +53,9 @@ char* FileMapping::map (const size_t Size, const size_t Offset)
 
 #else /* _WIN32 */
 
-  m_address = static_cast<char*>(mmap(0,
-                                 m_size,
-                                 PROT_READ,
-                                 MAP_PRIVATE,
-                                 m_file,
-                                 offset));
+  m_address =
+      static_cast<char*>(mmap(0, m_size, PROT_READ,
+                              MAP_PRIVATE, m_file, offset));
   const bool failed_map = m_address == MAP_FAILED;
 	if (failed_map)
 		return 0;

@@ -3,7 +3,8 @@ project (koohar)
 
 set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR
+    ${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
     ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
 
   SET (warnings "-Wall -Wextra -Woverloaded-virtual -Werror")
@@ -24,26 +25,39 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
 
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
   
-endif (${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
+endif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR
+       ${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
        ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+include_directories (
+	/opt/local/include
+)
+
+endif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+include_directories (
+  ${CMAKE_SOURCE_DIR}/src
+)
+
+set ( koohar_base
+  src/base/date.cc
+  src/base/file.cc
+  src/base/filemapping.cc
+  src/base/json.cc
+  src/base/utils.cc
+)
+
 set ( koohar_src
-  src/date.cc
-  src/file.cc
-  src/filemapping.cc
+  ${koohar_base}
   src/http_connection.cc
   src/http_parser.cc
-  src/parser.cc
   src/request.cc
   src/response.cc
   src/server_asio.cc
   src/server_config.cc
   src/uri_parser.cc
-  src/webpage.cc
-  src/webui.cc
-  src/xmlobjects.cc
-  src/json.cc
-  src/utils.cc
 )
 
 add_library ( koohar ${koohar_src} )

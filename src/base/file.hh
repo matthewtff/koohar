@@ -20,17 +20,17 @@ public:
 
 #ifdef _WIN32
 
-  typedef DWORD AccessType;
-
-  static const AccessType ReadOnly = GENERIC_READ;
-  static const AccessType WriteOnly = GENERIC_WRITE;
-  static const AccessType ReadWrite = (GENERIC_READ | GENERIC_WRITE);
+  enum class AccessType : DWORD {
+    ReadOnly = GENERIC_READ;
+    WriteOnly = GENERIC_WRITE;
+    ReadWrite = (GENERIC_READ | GENERIC_WRITE);
+  };
 
   typedef HANDLE Handle;
 
 #else /* _WIN32 */
 
-  enum AccessType {
+  enum class AccessType : int {
     ReadOnly = O_RDONLY,
     WriteOnly = O_WRONLY,
     ReadWrite = O_RDWR
@@ -40,7 +40,6 @@ public:
 
 #endif /* _WIN32 */
 
-
   enum Error {
     IOError = -1,
   };
@@ -48,6 +47,7 @@ public:
 public:
   File ();
   explicit File (File::Handle Hndl);
+  // This constructor just assigns filename, but file is NOT BEING OPENED.
   explicit File (const std::string& FileName);
   ~File ();
   bool open (AccessType Mode);
@@ -75,8 +75,8 @@ private:
   std::string m_fname;
   size_t m_size;
   time_t m_time;
-  bool m_opened; // true if file is opened
-  
+  bool m_opened;
+
 }; // class File
 
 } // namespace koohar

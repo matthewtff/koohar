@@ -12,21 +12,6 @@
 
 namespace koohar {
 
-std::string Request::m_session_error = "Session is not set.";
-
-std::string& Request::session (const std::string& Key)
-{
-  return (!m_session)
-    ? m_session_error
-    : m_session->operator[](Key);
-}
-
-void Request::unsetSession (const std::string& Key)
-{
-  if (m_session)
-    m_session->erase(Key);
-}
-
 bool Request::contains (const std::string& Url) const
 {
   return uri().find(Url) != Url.npos;

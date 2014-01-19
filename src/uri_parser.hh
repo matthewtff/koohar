@@ -7,8 +7,7 @@
 
 namespace koohar {
 
-class UriParser
-{
+class UriParser {
 public:
 	typedef std::map<std::string, std::string> StringMap;
 
@@ -34,8 +33,8 @@ private:
 	std::string decode (const std::string& Uri);
 
 private:
-	static std::regex m_uri_regex;
-	static std::regex m_query_regex;
+	static const std::regex m_uri_regex;
+	static const std::regex m_query_regex;
 	std::string m_scheme;
 	std::string m_authority;
 	std::string m_path;

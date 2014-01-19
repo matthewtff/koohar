@@ -13,7 +13,7 @@
 
 # CMake & make files
 Makefile
-CMakeLists.txt
+CMakeCache.txt
 CMakeFiles/*
 cmake_*
 
