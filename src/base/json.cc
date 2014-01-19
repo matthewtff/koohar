@@ -387,6 +387,8 @@ void Object::parseCollectionObject(const std::string& Stream,
   m_token.clear();
 }
 
+std::string strigify(const Object& Obj) { return Obj.toString(); }
+
 Object parse(const std::string& Stream)
 {
   Object result;

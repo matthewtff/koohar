@@ -201,7 +201,7 @@ Object& Object::operator = (const Trivial Value)
    return *this;
 }
 
-std::string strigify(const Object& Obj) { return Obj.toString(); }
+std::string strigify(const Object& Obj);
 Object parse(const std::string& Stream);
 
 } // namespace JSON
