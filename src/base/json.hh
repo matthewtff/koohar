@@ -88,7 +88,7 @@ public:
   }
 
   std::string& getString() { return m_string; }
-  std::string getString() const { return m_string; }
+  const std::string& getString() const { return m_string; }
   bool setString (const std::string& Str);
   template <typename Trivial>
   bool setTrivial(Trivial Value, std::false_type, std::false_type) {
@@ -100,17 +100,17 @@ public:
   Object& operator=(const Trivial Value);
 
   std::vector<Object>& getArray() { return m_array; }
-  std::vector<Object> getArray() const { return m_array; }
+  const std::vector<Object>& getArray() const { return m_array; }
   bool setArray (const std::vector<Object>& Objects);
   bool addToArray (const Object& Obj);
   bool remove (const std::size_t Index);
   Object& operator[](const std::size_t Index);
 
   std::map<std::string, Object>& getCollection() { return m_collection; }
-  std::map<std::string, Object> getcollection() const {
+  const std::map<std::string, Object>& getcollection() const {
     return m_collection;
   }
-  bool setCollection (const std::map<std::string, Object> ObjCollection);
+  bool setCollection (const std::map<std::string, Object>& ObjCollection);
   bool addToCollection (const std::string& Name, const Object& Obj);
   bool remove (const std::string& Name);
   Object& operator[](const std::string& Name);

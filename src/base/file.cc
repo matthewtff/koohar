@@ -2,15 +2,18 @@
 
 #ifndef _WIN32
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <cerrno>
 #include <cstring>
 #include <cstdio>
 #include <cstdlib>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
-#endif /* _WIN32 */
+
+#endif /* !_WIN32 */
+
+#include <vector>
 
 #include "base/utils.hh"
 
@@ -114,24 +117,33 @@ bool File::move (const std::string& NewFileName)
   return true;
 }
 
-int File::read (void* Buffer, const size_t Length)
-{
+int File::read (void* Buffer, const size_t Length) const {
   if (!m_opened)
     return IOError;
 
   return File::read(m_file, Buffer, Length);
 }
 
-int File::write (const void* Buffer, const size_t Length)
-{
+int File::write (const void* Buffer, const size_t Length) {
   if (!m_opened)
     return IOError;
 
   return File::write(m_file, Buffer, Length);
 }
 
-int File::read (File::Handle Hndl, void* Buffer, const size_t Length)
-{
+std::string File::readToString() const {
+  if (!m_opened)
+    return std::string();
+
+  std::vector<char> file_data(m_size);
+  const int readed = read(reinterpret_cast<void*>(&file_data[0]), m_size);
+  if (readed < 0 || readed > static_cast<int>(m_size))
+    return std::string();
+
+  return std::string(&file_data[0], readed);
+}
+
+int File::read (File::Handle Hndl, void* Buffer, const size_t Length) {
 #ifdef _WIN32
 
   DWORD return_value = 0;

@@ -98,9 +98,7 @@ Object& Object::operator [](const std::size_t Index)
   return m_array[Index];
 }
 
-bool Object::setCollection(
-    const std::map<std::string, Object> ObjCollection)
-{
+bool Object::setCollection(const std::map<std::string, Object>& ObjCollection) {
   checkUndefined(Type::Collection);
   if (!hasType(Type::Collection))
     return false;
@@ -108,7 +106,7 @@ bool Object::setCollection(
   return true;
 }
 
-bool Object::addToCollection(const std::string& Name, const Object &Obj)
+bool Object::addToCollection(const std::string& Name, const Object& Obj)
 {
   checkUndefined(Type::Collection);
   if (!hasType(Type::Collection))
