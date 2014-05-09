@@ -10,7 +10,7 @@ namespace koohar {
 
 ServerAsio::ServerAsio(const unsigned short Port)
     : m_port(Port), m_acceptor(m_io_service, tcp::endpoint(tcp::v4(), Port)) {
-  accept();
+  while (accept()) ;  // Intentionally empty instruction.
 }
 
 void ServerAsio::listen(HttpConnection::UserFunc UserCallFunction) {
@@ -20,7 +20,7 @@ void ServerAsio::listen(HttpConnection::UserFunc UserCallFunction) {
 
 // private
 
-void ServerAsio::accept() {
+bool ServerAsio::accept() {
   HttpConnection::Pointer new_connection =
       HttpConnection::create(m_acceptor.get_io_service(),
                              m_user_call_function,
@@ -35,17 +35,17 @@ void ServerAsio::accept() {
                     boost::asio::placeholders::error));
   } catch (boost::exception& e) {
     DLOG() << "Error accepting..." << std::endl;
+    return false;
   }
+  return true;
 }
 
 void ServerAsio::handleAccept(HttpConnection::Pointer NewConnection,
                               const boost::system::error_code& Error) {
-  if (!Error) {
-    NewConnection->setUserFunction(m_user_call_function);
-    NewConnection->start();
-  }
-  
-  accept();
+  if (Error)
+    return;
+  NewConnection->setUserFunction(m_user_call_function);
+  NewConnection->start();
 }
 
 } // namespace koohar

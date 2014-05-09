@@ -16,14 +16,12 @@ FileMapping::FileMapping (const File::Handle FH)
     : m_file(FH), m_address(0), m_mapped(false)
 {}
 
-FileMapping::~FileMapping ()
-{
+FileMapping::~FileMapping () {
 	if (m_mapped)
 		unMap();
 }
 
-char* FileMapping::map (const size_t Size, const size_t Offset)
-{
+char* FileMapping::map (const size_t Size, const size_t Offset) {
   // TODO(matthewtff): WTF? remove this offset cheating...
 	const size_t align_size = Offset;
 	const size_t offset = Offset;
@@ -65,8 +63,7 @@ char* FileMapping::map (const size_t Size, const size_t Offset)
 	return m_address + align_size;
 }
 
-void FileMapping::unMap ()
-{
+void FileMapping::unMap () {
 #ifdef _WIN32
 
 	UnmapViewOfFile(static_cast<LPVOID>(m_address));

@@ -1,9 +1,13 @@
 #ifndef koohar_utils_hh
 #define koohar_utils_hh
 
+#include <map>
 #include <ostream>
+#include <string>
 
 namespace koohar {
+
+typedef std::map<std::string, std::string> StringMap;
 
 template <typename T, size_t N>
 char (&ArraySizeHelper(const T (&array)[N]))[N];

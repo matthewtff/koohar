@@ -22,24 +22,25 @@ HttpParser::Method operator++ (HttpParser::Method& Meth) {
   }
 }
 
-std::regex HttpParser::m_cookie_regex ("([^=]+)=?([^;]*)(;)?[:space]?");
-
-HttpParser::StateCallback HttpParser::m_callbacks[] = {
-  &HttpParser::parseMethod,
-  &HttpParser::parseUri,
-  &HttpParser::parseHttpVersion,
-  &HttpParser::parseHeaderName,
-  &HttpParser::parseHeaderValue,
-  &HttpParser::parseBody
-};
-
-HttpParser::HttpParser () : m_state(State::OnMethod), m_content_length(0) {
-  static_assert(
-      array_size(m_callbacks) == static_cast<size_t>(State::OnComplete),
-      "Number of callbacks should equal to '<number of states> - 2'");
-}
+HttpParser::HttpParser () : m_state(State::OnMethod), m_content_length(0) {}
 
 bool HttpParser::update (const char* Data, const unsigned int Size) {
+  typedef void (HttpParser::*StateCallback) (const char ch);
+  static const StateCallback callbacks[] = {
+    &HttpParser::parseMethod,
+    &HttpParser::parseUri,
+    &HttpParser::parseHttpVersion,
+    &HttpParser::parseHeaderName,
+    &HttpParser::parseHeaderValue,
+    &HttpParser::parseBody
+  };
+
+  static_assert(
+      array_size(callbacks) == static_cast<size_t>(State::OnComplete),
+      "Number of callbacks should equal to '<number of states> - 2'");
+
+  static const std::size_t MaxTokenSize = 4096;
+
   for (unsigned int counter = 0; counter < Size; ++counter) {
     if (m_state == State::OnParseError)
       return false;
@@ -49,7 +50,7 @@ bool HttpParser::update (const char* Data, const unsigned int Size) {
     }
     if (m_state == State::OnComplete)
       return true;
-    (this->*m_callbacks[static_cast<size_t>(m_state)]) (Data[counter]);
+    (this->*callbacks[static_cast<size_t>(m_state)]) (Data[counter]);
   }
   return m_state != State::OnParseError;
 }
@@ -68,21 +69,22 @@ void HttpParser::parseMethod (const char ch) {
     { "CONNECT", Method::Connect }
   };
 
-  if (ch == ' ') {
-    m_state = State::OnUri;
-
-    for (const auto& pair : methods) {
-      if (m_token == pair.first) {
-        m_method = pair.second;
-        m_token.erase();
-        return;
-      }
-    }
-    // No such method...
-    m_token.erase();
-    m_state = State::OnParseError;
-  } else
+  if (ch != ' ') {
     m_token.append(1, ch);
+    return;
+  }
+
+  // Finished consuming method.
+  const auto method = std::find_if(methods.begin(), methods.end(),
+      [&](const std::pair<std::string, Method>& pair) {
+        return m_token == pair.first;
+      });
+  const bool correct_method = method != methods.end();
+  if (correct_method)
+    m_method = (*method).second;
+
+  m_token.erase();
+  m_state = correct_method ? State::OnUri : State::OnParseError;
 }
 
 void HttpParser::parseUri (const char ch) {
@@ -110,6 +112,9 @@ void HttpParser::parseHttpVersion (const char ch) {
       break;
       case '1':
         m_version.m_major = 1;
+      break;
+      case '2':
+        m_version.m_major = 2;
       break;
       default:
         m_state = State::OnParseError;
@@ -171,16 +176,17 @@ void HttpParser::parseBody (const char ch) {
 }
 
 void HttpParser::parseCookies (const std::string& CookieStr) {
-  if (CookieStr.empty())
-    return;
+  static const std::regex cookie_regex {"([^=]+)=?([^;]*)(;)?[:space]?"};
+
   const std::regex_constants::match_flag_type flags =
     std::regex_constants::match_default;
+
   std::string::const_iterator start = CookieStr.begin();
-  std::string::const_iterator end = CookieStr.end();
+  const std::string::const_iterator end = CookieStr.end();
   std::match_results<std::string::const_iterator> what;
-  while (std::regex_search(start, end, what, m_cookie_regex, flags)) {
-    std::string cookie_name (what[1].first, what[1].second);
-    std::string cookie_value (what[2].first, what[2].second);
+  while (std::regex_search(start, end, what, cookie_regex, flags)) {
+    const std::string cookie_name (what[1].first, what[1].second);
+    const std::string cookie_value (what[2].first, what[2].second);
     m_cookies[cookie_name] = cookie_value;
     start = what[0].second;
   }

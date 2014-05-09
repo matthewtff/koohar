@@ -2,16 +2,14 @@
 #define koohar_uri_parser_hh
 
 #include <string>
-#include <regex>
 #include <map>
+
+#include "base/utils.hh"
 
 namespace koohar {
 
 class UriParser {
-public:
-	typedef std::map<std::string, std::string> StringMap;
-
-public:
+ public:
 	bool parse (const std::string& uri);
 	std::string scheme () const { return m_scheme; }
 	std::string authority () const { return m_authority; }
@@ -19,30 +17,22 @@ public:
 	std::string query () const { return m_query; }
 	std::string fragment () const { return m_fragment; }
 
-	std::string cookie (const std::string& CookieName);
 	std::string body (const std::string& QueryName);
 
-protected:
+ protected:
 	void parseQuery (const std::string& QueryString);
 
-protected:
+ protected:
 	StringMap m_queries;
 
-private:
-	char fromHex (const char ch);
-	std::string decode (const std::string& Uri);
-
-private:
-	static const std::regex m_uri_regex;
-	static const std::regex m_query_regex;
+ private:
 	std::string m_scheme;
 	std::string m_authority;
 	std::string m_path;
 	std::string m_query;
 	std::string m_fragment;
+};  // class UriParser
 
-}; // class UriParser
-
-} // namespace koohar
+}  // namespace koohar
 
 #endif // koohar_uri_parser_hh

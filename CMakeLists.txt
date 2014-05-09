@@ -57,6 +57,7 @@ set ( koohar_src
   src/response.cc
   src/server_asio.cc
   src/server_config.cc
+  src/static_transfer.cc
   src/uri_parser.cc
 )
 

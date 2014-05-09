@@ -68,9 +68,6 @@ protected:
   StringMap m_cookies;
 
 private:
-
-  static const size_t MaxTokenSize = 4096;
-
   enum class State {
     OnMethod,
     OnUri,
@@ -82,8 +79,6 @@ private:
     OnParseError
   };
 
-  typedef void (HttpParser::*StateCallback) (const char ch);
-
   void parseMethod (const char ch);
   void parseUri (const char ch);
   void parseHttpVersion (const char ch);
@@ -94,17 +89,11 @@ private:
   void parseCookies (const std::string& CookieStr);
 
 private:
-  // Number of callbacks intentionally left blank, to statically assert it
-  // against really initialized callbacks and number of states;
-  static StateCallback m_callbacks[];
-  static std::regex m_cookie_regex;
-
   State m_state;
   std::string m_token;
   std::string m_current_header;
 
   std::uint64_t m_content_length;
-
 }; // class HttpParser
 
 } // namespace koohar

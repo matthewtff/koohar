@@ -6,21 +6,17 @@
 
 #else /* _WIN32 */
 
-#include <errno.h>
+#include <cerrno>
 
-#endif /* _WIN32 */
+#endif /* !_WIN32 */
 
 namespace koohar {
 
-bool Request::contains (const std::string& Url) const
-{
-  return uri().find(Url) != Url.npos;
+bool Request::contains (const std::string& Url) const {
+  return uri().find(Url) != std::string::npos;
 }
 
-bool Request::corresponds (const std::string& StaticUrl) const
-{
-  if (uri().empty() || uri().length() < StaticUrl.length())
-    return false;
+bool Request::corresponds (const std::string& StaticUrl) const {
   return uri().find(StaticUrl) == 0;
 }
 

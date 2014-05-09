@@ -6,80 +6,69 @@
 #include "base/filemapping.hh"
 #include "base/utils.hh"
 
-namespace {
-
-koohar::Response::StateMap initStates ()
-{
-  koohar::Response::StateMap States;
-  States[100] = "100 Continue";
-  States[101] = "101 Switching Protocols";
-  States[102] = "102 Processing";
-
-  States[200] = "200 OK";
-  States[201] = "201 Created";
-  States[202] = "202 Accepted";
-  States[203] = "203 Non-Authoritative Information";
-  States[204] = "204 No Content";
-  States[205] = "205 Reset Content";
-  States[206] = "206 Partial Content";
-  States[207] = "207 Multi-Status";
-  States[226] = "226 IM Used";
-
-  States[300] = "300 Multiple Choises";
-  States[301] = "301 Moved Permamently";
-  States[302] = "302 Found";
-  States[303] = "303 See Other";
-  States[304] = "304 Not Modified";
-  States[305] = "305 Use Proxy";
-  States[307] = "307 Temporary Redirect";
-
-  States[400] = "400 Bad Request";
-  States[401] = "401 Unauthorized";
-  States[402] = "402 Payment Required";
-  States[403] = "403 Forbidden";
-  States[404] = "404 Not Found";
-  States[405] = "405 Method Not Allowed";
-  States[406] = "406 Not Acceptable";
-  States[407] = "407 Proxy Authentication Required";
-  States[408] = "408 Request Timeout";
-  States[409] = "409 Conflict";
-  States[410] = "410 Gone";
-  States[411] = "411 Length Required";
-  States[412] = "412 Precondition Failed";
-  States[413] = "413 Request Entity Too Large";
-  States[414] = "414 Request-URI Too Long";
-  States[415] = "415 Unsupported Media Type";
-  States[416] = "416 Requested Range Not Satisfiable";
-  States[417] = "417 Expectation Failed";
-  States[418] = "418 I'm a teapot"; // First april joke : rfc 2424
-  States[422] = "422 Unprocessable Entity";
-  States[423] = "423 Loked";
-  States[424] = "424 Failed Dependency";
-  States[425] = "425 Unordered Collection";
-  States[426] = "426 Upgrade Required";
-  States[449] = "449 Retry Width";
-  States[456] = "456 Unrecoverable Error";
-
-  States[500] = "500 Internal Server Error";
-  States[501] = "501 Not Implemented";
-  States[502] = "502 Bad Gateway";
-  States[503] = "503 Service Unavailable";
-  States[504] = "504 Gateway Timeout";
-  States[505] = "505 HTTP Version No Supported";
-  States[506] = "506 Variant Also Negotiates";
-  States[507] = "507 Insufficient Storage";
-  States[509] = "509 Bandwidth Limit Exceeded";
-  States[510] = "510 Not Extended";
-  
-  return States;
-}
-
-} // namespace
-
-
 namespace koohar {
 
-Response::StateMap Response::States = initStates();
+Response::StateMap Response::States = {
+  {100, "100 Continue"},
+  {101, "101 Switching Protocols"},
+  {102, "102 Processing"},
+
+  {200, "200 OK"},
+  {201, "201 Created"},
+  {202, "202 Accepted"},
+  {203, "203 Non-Authoritative Information"},
+  {204, "204 No Content"},
+  {205, "205 Reset Content"},
+  {206, "206 Partial Content"},
+  {207, "207 Multi-Status"},
+  {226, "226 IM Used"},
+
+  {300, "300 Multiple Choises"},
+  {301, "301 Moved Permamently"},
+  {302, "302 Found"},
+  {303, "303 See Other"},
+  {304, "304 Not Modified"},
+  {305, "305 Use Proxy"},
+  {307, "307 Temporary Redirect"},
+
+  {400, "400 Bad Request"},
+  {401, "401 Unauthorized"},
+  {402, "402 Payment Required"},
+  {403, "403 Forbidden"},
+  {404, "404 Not Found"},
+  {405, "405 Method Not Allowed"},
+  {406, "406 Not Acceptable"},
+  {407, "407 Proxy Authentication Required"},
+  {408, "408 Request Timeout"},
+  {409, "409 Conflict"},
+  {410, "410 Gone"},
+  {411, "411 Length Required"},
+  {412, "412 Precondition Failed"},
+  {413, "413 Request Entity Too Large"},
+  {414, "414 Request-URI Too Long"},
+  {415, "415 Unsupported Media Type"},
+  {416, "416 Requested Range Not Satisfiable"},
+  {417, "417 Expectation Failed"},
+  {418, "418 I'm a teapot"}, // First april joke : rfc 2424
+  {422, "422 Unprocessable Entity"},
+  {423, "423 Loked"},
+  {424, "424 Failed Dependency"},
+  {425, "425 Unordered Collection"},
+  {426, "426 Upgrade Required"},
+  {449, "449 Retry Width"},
+  {456, "456 Unrecoverable Error"},
+
+  {500, "500 Internal Server Error"},
+  {501, "501 Not Implemented"},
+  {502, "502 Bad Gateway"},
+  {503, "503 Service Unavailable"},
+  {504, "504 Gateway Timeout"},
+  {505, "505 HTTP Version No Supported"},
+  {506, "506 Variant Also Negotiates"},
+  {507, "507 Insufficient Storage"},
+  {509, "509 Bandwidth Limit Exceeded"},
+  {510, "510 Not Extended"},
+};
 
 Response::Response (HttpConnection::Pointer Connection) :
   m_headers_allowed(true), m_connection(Connection)
@@ -123,20 +112,14 @@ bool Response::body(const std::string& String) {
 }
 
 bool Response::body(const void* Buffer, const off_t BufferSize) {
-  if (m_headers_allowed) { // sending headers
-    sendHeaders();
-  } else if (!m_headers.empty()) {
-    DLOG() << "[Response::body] Double header sending" << std::endl;
-    return false;
-  }
+  sendHeaders();
   return transfer(Buffer, BufferSize);
 }
 
 bool Response::sendFile(const File::Handle Handle,
                         const off_t Size,
                         const off_t Offset) {
-  if (m_headers_allowed)
-    sendHeaders();
+  sendHeaders();
 
   FileMapping mapping(Handle);
   const char* mapped_file = mapping.map(Size, Offset);
@@ -153,22 +136,19 @@ void Response::end(const std::string& String) {
 }
 
 void Response::end(const void* Buffer, const off_t BufferSize) {
-  if (m_headers_allowed)
-    sendHeaders();
-  if (Buffer && BufferSize)
-    body(Buffer, BufferSize);
+  sendHeaders();
+  body(Buffer, BufferSize);
   m_connection->close();
 }
 
 void Response::end() {
-  if (m_headers_allowed)
-    sendHeaders();
+  sendHeaders();
   m_connection->close();
 }
 
 void Response::redirect(const std::string& Url) {
   writeHead(302);
-  header("Location", Url); // Redirecting with HTTP header
+  header("Location", Url);
 }
 
 void Response::sendJSON(const JSON::Object& Obj) {
@@ -192,6 +172,9 @@ bool Response::transfer(const void* Buffer, const off_t BufferSize) {
 void Response::sendHeaders() {
   static const char HeaderDelimiter[] = ": ";
   static const char LineDelimiter[] = "\r\n";
+
+  if (!m_headers_allowed)
+    return;
   for (const auto& header : m_headers) {
     transfer(header.first.c_str(), header.first.length());
     transferString(HeaderDelimiter);
@@ -200,7 +183,7 @@ void Response::sendHeaders() {
   }
   transferString(LineDelimiter);
   m_headers.clear();
-  m_headers_allowed = false; // no more headers
+  m_headers_allowed = false;
 }
 
 } // namespace koohar

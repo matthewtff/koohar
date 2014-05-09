@@ -13,8 +13,6 @@ namespace koohar {
 
 class Sender;
 
-typedef std::map<std::string, std::string> StringMap;
-
 class Response {
 public:
   typedef std::map<unsigned short, std::string> StateMap;
@@ -28,6 +26,7 @@ public:
 
 public:
   explicit Response(HttpConnection::Pointer Connection);
+  Response(Response&& other) = default;
 
   /**
    * Sets and sends appropriate http status to client.

@@ -11,17 +11,19 @@
 
 namespace koohar {
 
-bool ServerConfig::isStaticUrl (const Request& Req) const {
+bool ServerConfig::isStaticUrl(const Request& req) const {
   return m_static_urls.cend() !=
   std::find_if(m_static_urls.cbegin(),
                m_static_urls.cend(),
                std::bind(&Request::corresponds,
-                         &Req,
+                         &req,
                          std::placeholders::_1));
 }
 
-void ServerConfig::load (const std::string& FileName) {
-  std::ifstream f(FileName.c_str());
+void ServerConfig::load(const std::string& file_name) {
+  std::ifstream f(file_name.c_str());
+  if (!f)
+    return;
   const std::string contents((std::istreambuf_iterator<char>(f)),
                              std::istreambuf_iterator<char>());
 
@@ -56,8 +58,8 @@ void ServerConfig::load (const std::string& FileName) {
   }
 }
 
-std::string ServerConfig::getErrorPage (const unsigned short Code) const {
-  const StringMap::const_iterator page_iterator = m_error_pages.find(Code);
+std::string ServerConfig::getErrorPage(const unsigned short code) const {
+  const ErrorPagesMap::const_iterator page_iterator = m_error_pages.find(code);
   if (page_iterator != m_error_pages.end())
     return page_iterator->second;
   return std::string();

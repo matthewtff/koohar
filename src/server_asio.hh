@@ -12,7 +12,7 @@ class ServerAsio : public ServerConfig {
 public:
   ServerAsio(const unsigned short Port = 80);
 
-  virtual ~ServerAsio() {}
+  virtual ~ServerAsio() = default;
 
   void listen(HttpConnection::UserFunc UserCallFunction);
 
@@ -21,7 +21,7 @@ public:
   void stop() { m_io_service.stop(); }
 
 private:
-  void accept();
+  bool accept();
   void handleAccept(HttpConnection::Pointer NewConnection,
                     const boost::system::error_code& Error);
 
@@ -31,8 +31,8 @@ private:
   boost::asio::ip::tcp::acceptor m_acceptor;
 
   HttpConnection::UserFunc m_user_call_function;
-}; // class ServerAsio
+};  // class ServerAsio
 
-} // namespace koohar
+}  // namespace koohar
 
 #endif // koohar_server_asio_hh
