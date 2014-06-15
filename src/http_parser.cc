@@ -92,10 +92,11 @@ void HttpParser::parseUri (const char ch) {
     m_uri = m_token;
     m_state = State::OnHttpVersion;
     m_token.erase();
-    if (!parse(m_uri)) // bad uri.
+    if (!parse(m_uri)) // Bad uri.
       m_state = State::OnParseError;
-  } else
+  } else {
     m_token.append(1, ch);
+  }
 }
 
 void HttpParser::parseHttpVersion (const char ch) {
@@ -136,8 +137,9 @@ void HttpParser::parseHttpVersion (const char ch) {
       break;
     }
     m_token.erase();
-  } else if (ch != '\r')
+  } else if (ch != '\r') {
     m_token.append(1, ch);
+  }
 }
 
 void HttpParser::parseHeaderName (const char ch) {
@@ -148,21 +150,24 @@ void HttpParser::parseHeaderName (const char ch) {
     m_current_header = m_token;
     m_state = State::OnHeaderValue;
     m_token.erase();
-  } else if (ch != ':')
+  } else if (ch != ':') {
     m_token.append(1, tolower(ch));
+  }
 }
 
 void HttpParser::parseHeaderValue (const char ch) {
   if (ch == '\n') {
     m_headers[m_current_header] = m_token;
-    if (m_current_header == "content-length")
+    if (m_current_header == "content-length") {
       m_content_length = std::atol(m_token.c_str());
-    else if (m_current_header == "cookie")
+    } else if (m_current_header == "cookie") {
       parseCookies(m_token);
+    }
     m_state = State::OnHeaderName;
     m_token.erase();
-  } else if (ch != '\r')
+  } else if (ch != '\r') {
     m_token.append(1, ch);
+  }
 }
 
 void HttpParser::parseBody (const char ch) {
@@ -170,15 +175,15 @@ void HttpParser::parseBody (const char ch) {
   m_token.append(1, ch);
   if (m_token.length() == m_content_length) {
     m_state = State::OnComplete;
-    if (m_method == Method::Post)
+    if (m_method == Method::Post) {
       parseQuery(m_body);
+    }
   }
 }
 
 void HttpParser::parseCookies (const std::string& CookieStr) {
   static const std::regex cookie_regex {"([^=]+)=?([^;]*)(;)?[:space]?"};
-
-  const std::regex_constants::match_flag_type flags =
+  static const std::regex_constants::match_flag_type flags =
     std::regex_constants::match_default;
 
   std::string::const_iterator start = CookieStr.begin();

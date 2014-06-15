@@ -77,7 +77,7 @@ Response::Response (HttpConnection::Pointer Connection) :
 void Response::writeHead(const unsigned short State) {
   if (!m_headers_allowed)
     return;
-  std::string head("HTTP/1.1 ");
+  std::string head {"HTTP/1.1 "};
   head += States[State] + "\r\n";
   transfer(head.c_str(), head.length());
 }
@@ -107,13 +107,13 @@ bool Response::cookie(const std::string& CookieName,
   return true;
 }
 
-bool Response::body(const std::string& String) {
-  return body(String.c_str(), String.length());
+void Response::body(const std::string& String) {
+  body(String.c_str(), String.length());
 }
 
-bool Response::body(const void* Buffer, const off_t BufferSize) {
+void Response::body(const void* Buffer, const off_t BufferSize) {
   sendHeaders();
-  return transfer(Buffer, BufferSize);
+  transfer(Buffer, BufferSize);
 }
 
 bool Response::sendFile(const File::Handle Handle,
@@ -121,7 +121,7 @@ bool Response::sendFile(const File::Handle Handle,
                         const off_t Offset) {
   sendHeaders();
 
-  FileMapping mapping(Handle);
+  FileMapping mapping {Handle};
   const char* mapped_file = mapping.map(Size, Offset);
 
   if (!mapped_file)
@@ -164,14 +164,13 @@ void Response::badRequest() {
 
 // private
 
-bool Response::transfer(const void* Buffer, const off_t BufferSize) {
+void Response::transfer(const void* Buffer, const off_t BufferSize) {
   m_connection->write(static_cast<const char*>(Buffer), BufferSize);
-  return true;
 }
 
 void Response::sendHeaders() {
-  static const char HeaderDelimiter[] = ": ";
-  static const char LineDelimiter[] = "\r\n";
+  static const char HeaderDelimiter[] {": "};
+  static const char LineDelimiter[] {"\r\n"};
 
   if (!m_headers_allowed)
     return;

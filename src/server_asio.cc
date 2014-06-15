@@ -9,12 +9,13 @@ using boost::asio::ip::tcp;
 namespace koohar {
 
 ServerAsio::ServerAsio(const unsigned short Port)
-    : m_port(Port), m_acceptor(m_io_service, tcp::endpoint(tcp::v4(), Port)) {
-  while (accept()) ;  // Intentionally empty instruction.
+    : m_port(Port),
+      m_acceptor(m_io_service, tcp::endpoint(tcp::v4(), Port)) {
 }
 
 void ServerAsio::listen(HttpConnection::UserFunc UserCallFunction) {
   m_user_call_function = UserCallFunction;
+  accept();
   m_io_service.run();
 }
 
@@ -42,6 +43,7 @@ bool ServerAsio::accept() {
 
 void ServerAsio::handleAccept(HttpConnection::Pointer NewConnection,
                               const boost::system::error_code& Error) {
+  accept();
   if (Error)
     return;
   NewConnection->setUserFunction(m_user_call_function);

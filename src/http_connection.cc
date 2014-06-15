@@ -72,7 +72,7 @@ void HttpConnection::handleRead (const boost::system::error_code& Error,
   if (Error) 
     return;
 
-  Response res(shared_from_this());
+  Response res {shared_from_this()};
   res.header("Server", "koohar.app");
 
   if (!m_request.update(m_request_buffer, BytesTransferred)) {
@@ -82,7 +82,7 @@ void HttpConnection::handleRead (const boost::system::error_code& Error,
   }
 
   if (m_config.isStaticUrl(m_request)) {
-    StaticTransfer static_transfer(m_request, std::move(res), m_config);
+    StaticTransfer static_transfer {m_request, std::move(res), m_config};
     static_transfer.Serve();
   } else if (m_user_call_function) {
     m_user_call_function(m_request, res);

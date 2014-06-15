@@ -9,7 +9,7 @@ namespace koohar {
 
 class Request : public HttpParser {
 public:
-	int errorCode () const { return 400; }
+	static int errorCode () { return 400; }
 
 	bool contains (const std::string& Url) const;
 	bool corresponds (const std::string& StaticUrl) const;

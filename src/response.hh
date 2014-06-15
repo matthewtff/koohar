@@ -48,12 +48,12 @@ public:
   bool cookie(const std::string& CookieName,
               const std::string& CookieValue);
 
-  bool body (const std::string& String);
+  void body (const std::string& String);
 
   /**
    * Send some data. Can be called multiple times.
    */
-  bool body(const void* Buffer, const off_t BufferSize);
+  void body(const void* Buffer, const off_t BufferSize);
 
   /**
    * Cannot be used whith body() method. After using you still should call
@@ -88,12 +88,12 @@ private:
    * body() and end() methods have some identical code, so it moved to
    * private method.
    */
-  bool transfer(const void* Buffer, const off_t BufferSize);
+  void transfer(const void* Buffer, const off_t BufferSize);
 
   template <size_t N>
-  bool transferString(const char (&Str) [N]) {
-    return transfer(reinterpret_cast<const void*>(Str),
-                    static_cast<off_t>(string_length(Str)));
+  void transferString(const char (&Str) [N]) {
+    transfer(reinterpret_cast<const void*>(Str),
+             static_cast<off_t>(string_length(Str)));
   }
 
   /**
