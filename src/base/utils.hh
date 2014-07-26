@@ -5,6 +5,12 @@
 #include <ostream>
 #include <string>
 
+#ifndef NDEBUG
+
+#include <iostream>
+
+#endif // NDEBUG
+
 namespace koohar {
 
 typedef std::map<std::string, std::string> StringMap;
@@ -23,7 +29,17 @@ constexpr size_t string_length(const char (&)[N]) {
   return N - 1;
 }
 
-std::ostream& DLOG();
+#ifndef NDEBUG
+
+#define LOG (std::cout)
+
+#else // NDEBUG
+
+class DummyOstream : public std::ostream {};
+
+#define LOG dummy;
+
+#endif // NDEBUG
 
 void NOTREACHED();
 

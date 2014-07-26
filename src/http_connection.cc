@@ -1,8 +1,7 @@
 #include "http_connection.hh"
 
+#include <functional>
 #include <sstream>
-
-#include <boost/bind.hpp>
 
 #include "base/file.hh"
 #include "base/utils.hh"
@@ -23,9 +22,9 @@ HttpConnection::Pointer HttpConnection::create (
 void HttpConnection::start () {
   m_socket.async_read_some (
       boost::asio::buffer(m_request_buffer, MaxRequestSize),
-      boost::bind(&HttpConnection::handleRead, shared_from_this(),
-          boost::asio::placeholders::error,
-          boost::asio::placeholders::bytes_transferred));
+      std::bind(&HttpConnection::handleRead, shared_from_this(),
+                std::placeholders::_1,
+                std::placeholders::_2));
 }
 
 void HttpConnection::write (const char* Data, std::size_t Size) {
@@ -33,16 +32,15 @@ void HttpConnection::write (const char* Data, std::size_t Size) {
     return;
 
   std::vector<char> buffer(Data, Data + Size);
+  m_buffers.emplace_back(buffer);
 
   boost::asio::async_write(
       m_socket,
-      boost::asio::buffer(buffer),
-      boost::bind(&HttpConnection::handleWrite,
-                  shared_from_this(),
-                  boost::asio::placeholders::error,
-                  boost::asio::placeholders::bytes_transferred));
-
-  m_buffers.emplace_back(buffer);
+      boost::asio::buffer(*(m_buffers.rbegin())),
+      std::bind(&HttpConnection::handleWrite,
+                shared_from_this(),
+                std::placeholders::_1,
+                std::placeholders::_2));
 
   ++m_writing_operations;
 }
@@ -52,7 +50,7 @@ void HttpConnection::setUserFunction (UserFunc UserCallFunction) {
 }
 
 HttpConnection::~HttpConnection() {
-  DLOG() << "HttpConnection::~HttpConnection()" << std::endl;
+  LOG << "HttpConnection::~HttpConnection()" << std::endl;
 }
 
 // private
@@ -65,7 +63,8 @@ HttpConnection::HttpConnection(boost::asio::io_service& io_service,
       m_user_call_function(user_call_function),
       m_writing_operations(0),
       m_close_socket(false)
-{}
+{
+}
 
 void HttpConnection::handleRead (const boost::system::error_code& Error,
                                  const std::size_t BytesTransferred) {
@@ -87,14 +86,14 @@ void HttpConnection::handleRead (const boost::system::error_code& Error,
   } else if (m_user_call_function) {
     m_user_call_function(m_request, res);
   } else {
-    DLOG() << "HttpConnection[callback_error] : Callback was not set";
+    LOG << "HttpConnection[callback_error] : Callback was not set";
   }
 }
 
 void HttpConnection::handleWrite (const boost::system::error_code& Error,
                                   const std::size_t BytesTransferred) {
   if (!Error && BytesTransferred == 0)
-    DLOG() << "HttpConnection[write_error] : transferred 0 bytes";
+    LOG << "HttpConnection[write_error] : transferred 0 bytes";
 
   if (m_writing_operations > 0)
     --m_writing_operations;

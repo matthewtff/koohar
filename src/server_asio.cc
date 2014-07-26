@@ -1,6 +1,6 @@
 #include "server_asio.hh"
 
-#include <boost/bind.hpp>
+#include <functional>
 
 #include "base/utils.hh"
 
@@ -30,12 +30,12 @@ bool ServerAsio::accept() {
   try {
     m_acceptor.async_accept(
         new_connection->socket(),
-        boost::bind(&ServerAsio::handleAccept,
-                    this,
-                    new_connection,
-                    boost::asio::placeholders::error));
+        std::bind(&ServerAsio::handleAccept,
+                  this,
+                  new_connection,
+                  std::placeholders::_1));
   } catch (boost::exception& e) {
-    DLOG() << "Error accepting..." << std::endl;
+    LOG << "Error accepting..." << std::endl;
     return false;
   }
   return true;
