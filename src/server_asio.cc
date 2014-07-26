@@ -35,7 +35,7 @@ bool ServerAsio::accept() {
                   new_connection,
                   std::placeholders::_1));
   } catch (boost::exception& e) {
-    LOG << "Error accepting..." << std::endl;
+    LOG << "Error accepting." << std::endl;
     return false;
   }
   return true;

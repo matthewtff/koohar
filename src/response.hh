@@ -14,7 +14,7 @@ namespace koohar {
 class Sender;
 
 class Response {
-public:
+ public:
   typedef std::map<unsigned short, std::string> StateMap;
 
   /**
@@ -24,9 +24,10 @@ public:
    */
   static StateMap States;
 
-public:
   explicit Response(HttpConnection::Pointer Connection);
-  Response(Response&& other) = default;
+  Response(Response&&) = default;
+
+  Response& operator=(Response&&) = default;
 
   /**
    * Sets and sends appropriate http status to client.
@@ -104,7 +105,7 @@ private:
 
 private:
   StringMap m_headers;
-  bool m_headers_allowed; // True, till any part of body is sent.
+  bool m_headers_allowed; // Set to true, till any part of body is sent.
   
   HttpConnection::Pointer m_connection;
 }; // class Response

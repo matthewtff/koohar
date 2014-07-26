@@ -13,8 +13,7 @@ namespace koohar {
  * This is FSM based http parser.
  */
 class HttpParser : public UriParser {
-public:
-
+ public:
   struct Version {
     unsigned short int m_major;
     unsigned short int m_minor;
@@ -31,9 +30,10 @@ public:
     Connect
   };
 
-public:
-  HttpParser ();
-  virtual ~HttpParser () {}
+  HttpParser() = default;
+  HttpParser(HttpParser&&) = default;
+
+  HttpParser& operator=(HttpParser&&) = default;
 
   /**
    * Makes parser to eat more data and parse it. Could be called multiple
@@ -44,7 +44,7 @@ public:
    */
   bool update (const char* Data, const unsigned int Size);
   bool isBad () const { return m_state == State::OnParseError; }
-  bool isComplete () const { return m_state == State::OnComplete; }
+  bool IsComplete () const { return m_state == State::OnComplete; }
   Method method () const { return m_method; }
   std::string uri () const { return m_uri; }
   Version version () const { return m_version; }
@@ -89,11 +89,11 @@ private:
   void parseCookies (const std::string& CookieStr);
 
 private:
-  State m_state;
+  State m_state = State::OnMethod;
   std::string m_token;
   std::string m_current_header;
 
-  std::uint64_t m_content_length;
+  std::uint64_t m_content_length = 0;
 }; // class HttpParser
 
 } // namespace koohar

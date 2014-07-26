@@ -22,8 +22,6 @@ HttpParser::Method operator++ (HttpParser::Method& Meth) {
   }
 }
 
-HttpParser::HttpParser () : m_state(State::OnMethod), m_content_length(0) {}
-
 bool HttpParser::update (const char* Data, const unsigned int Size) {
   typedef void (HttpParser::*StateCallback) (const char ch);
   static const StateCallback callbacks[] = {

@@ -1,20 +1,26 @@
 #include "static_transfer.hh"
 
+#include <stdexcept>
 #include <utility>
 
 #include "base/file.hh"
 
 namespace koohar {
 
-StringMap StaticTransfer::m_mime_types = {
+namespace {
+const char kOctetStreamMimeType[] = "application/octet-stream";
+}  // anonymous namespace
+
+const StringMap StaticTransfer::mime_types_ = {
   {"css", "text/css"},
-  {"ebm", "video/webm"}, // webm actually
+  {"webm", "video/webm"},
   {"jpe", "image/jpeg"},
   {"jpg", "image/jpeg"},
   {"iff", "image/tiff"},
   {"gif", "image/gif"},
   {"htm", "text/html"},
-  {"k3d", "video/x-matroska-3d"}, // mk3d actually
+  {"html", "text/html"},
+  {"mk3d", "video/x-matroska-3d"},
   {"mka", "audio/x-matroska"},
   {"mkv", "video/x-matroska"},
   {"mov", "video/quicktime"},
@@ -25,7 +31,7 @@ StringMap StaticTransfer::m_mime_types = {
   {"png", "image/png"},
   {"rtf", "application/rtf"},
   {"rtx", "text/richtext"},
-  {"son", "application/json"}, // json actually
+  {"json", "application/json"},
   {"tif", "image/tiff"},
   {"tml", "text/html"},
   {"txt", "text/plain"},
@@ -34,11 +40,11 @@ StringMap StaticTransfer::m_mime_types = {
   {".js", "application/x-javascript"},
 };
 
-StaticTransfer::StaticTransfer(const Request& request,
+StaticTransfer::StaticTransfer(Request&& request,
                                Response&& response,
                                const ServerConfig& config)
-    : m_request(request),
-      m_response(std::forward<Response>(response)),
+    : m_request(std::move(request)),
+      m_response(std::move(response)),
       m_config(config) {
 }
 
@@ -56,7 +62,7 @@ void StaticTransfer::Serve() {
     return handleError(404);
 
   m_response.header("Connection", "Close");
-  m_response.header("Content-Type", mimeFromName(file_name));
+  m_response.header("Content-Type", MimeFromName(file_name));
 
   unsigned long shift = 0;
   unsigned long size = 0;
@@ -114,7 +120,6 @@ void StaticTransfer::Serve() {
 
   m_response.sendFile(static_file.getHandle(), static_file.getSize(), 0);
   m_response.end();
-
 }
 
 bool StaticTransfer::isVulnerable (const std::string& FileName) {
@@ -128,12 +133,13 @@ void StaticTransfer::handleError (const unsigned short Code) {
     m_response.end();
 }
 
-std::string StaticTransfer::mimeFromName (const std::string& FileName) {
-  //TODO(matthewtff): Use rfind to locate a dot and get correct extension.
-  static const std::size_t mime_size = 3;
-  std::string mime_substring =
-    FileName.substr(FileName.length() - mime_size, mime_size);
-  return m_mime_types[mime_substring];
+std::string StaticTransfer::MimeFromName(const std::string& file_name) {
+  try {
+    const std::string& file_extension = file_name.substr(file_name.rfind('.') + 1);
+    return mime_types_.at(file_extension);
+  } catch (std::out_of_range& e) {
+    return kOctetStreamMimeType;
+  }
 }
 
 }  // namespace koohar

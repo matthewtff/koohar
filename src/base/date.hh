@@ -1,26 +1,25 @@
 #ifndef koohar_date_hh
 #define koohar_date_hh
 
+#include <ctime>
 #include <string>
-#include <boost/date_time/local_time/local_time.hpp>
 
 namespace koohar {
 
 class Date {
+ public:
+  Date();
+  explicit Date(const std::string& date_string);
 
-public:
+  std::string ToString() const;
+  bool Parse(const std::string& date_string);
 
-  Date ();
-  explicit Date (const std::string& DateString);
+ private:
+  bool ParseRFC1123(const std::string& date_string);
+  bool ParseRFC1036(const std::string& date_string);
+  bool ParseANSIC(const std::string& date_string);
 
-  std::string toString () const;
-
-  void parse (const std::string& DateString);
-
-private:
-
-  boost::local_time::local_date_time m_date;
-
+  std::tm date_;
 }; // class Date
 
 } // namespace koohar

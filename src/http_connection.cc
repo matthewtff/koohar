@@ -22,7 +22,8 @@ HttpConnection::Pointer HttpConnection::create (
 void HttpConnection::start () {
   m_socket.async_read_some (
       boost::asio::buffer(m_request_buffer, MaxRequestSize),
-      std::bind(&HttpConnection::handleRead, shared_from_this(),
+      std::bind(&HttpConnection::handleRead,
+                shared_from_this(),
                 std::placeholders::_1,
                 std::placeholders::_2));
 }
@@ -31,8 +32,11 @@ void HttpConnection::write (const char* Data, std::size_t Size) {
   if (!Data || !Size)
     return;
 
-  std::vector<char> buffer(Data, Data + Size);
-  m_buffers.emplace_back(buffer);
+  if (m_close_socket) {
+    LOG << "HttpConnection[write_error]: Writing to socket after close";
+  }
+
+  m_buffers.emplace_back(Data, Data + Size);
 
   boost::asio::async_write(
       m_socket,
@@ -50,7 +54,7 @@ void HttpConnection::setUserFunction (UserFunc UserCallFunction) {
 }
 
 HttpConnection::~HttpConnection() {
-  LOG << "HttpConnection::~HttpConnection()" << std::endl;
+  LOG << "HttpConnection::~HttpConnection() " << url_ << std::endl;
 }
 
 // private
@@ -62,29 +66,32 @@ HttpConnection::HttpConnection(boost::asio::io_service& io_service,
       m_socket(io_service),
       m_user_call_function(user_call_function),
       m_writing_operations(0),
-      m_close_socket(false)
-{
+      m_close_socket(false) {
 }
 
 void HttpConnection::handleRead (const boost::system::error_code& Error,
                                  const std::size_t BytesTransferred) {
-  if (Error) 
+  if (Error)
     return;
 
-  Response res {shared_from_this()};
-  res.header("Server", "koohar.app");
+  Response res{shared_from_this()};
+  res.header("Server", "koohar");
 
   if (!m_request.update(m_request_buffer, BytesTransferred)) {
     res.writeHead(m_request.errorCode());
     res.end();
     return;
+  } else if (!m_request.IsComplete()) {
+    return start();
   }
 
+  url_ = m_request.uri();
+
   if (m_config.isStaticUrl(m_request)) {
-    StaticTransfer static_transfer {m_request, std::move(res), m_config};
+    StaticTransfer static_transfer{std::move(m_request), std::move(res), m_config};
     static_transfer.Serve();
   } else if (m_user_call_function) {
-    m_user_call_function(m_request, res);
+    m_user_call_function(std::move(m_request), std::move(res));
   } else {
     LOG << "HttpConnection[callback_error] : Callback was not set";
   }

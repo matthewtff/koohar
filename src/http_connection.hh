@@ -22,7 +22,7 @@ public:
 
   typedef std::shared_ptr<HttpConnection> Pointer;
 
-  typedef std::function<void(koohar::Request&, koohar::Response&)> UserFunc;
+  typedef std::function<void(koohar::Request&&, koohar::Response&&)> UserFunc;
 
   typedef std::list<std::vector<char>> DataBuffers;
 
@@ -60,6 +60,8 @@ private:
   DataBuffers m_buffers;
   int m_writing_operations;
   bool m_close_socket;
+
+  std::string url_;
 }; // class HttpConnection
 
 } // namespace koohar
