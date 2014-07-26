@@ -51,8 +51,8 @@ bool File::open (AccessType Mode)
 
 #endif /* _WIN32 */
 
-    DLOG() << "Error opening file " << m_fname << std::endl;
-    DLOG() << strerror(errno) << std::endl;
+    LOG << "Error opening file " << m_fname << std::endl;
+    LOG << strerror(errno) << std::endl;
     return false;
   }
   m_opened = true;
@@ -92,7 +92,7 @@ void File::remove ()
 
 #endif /* _WIN32 */
 
-    DLOG() << "Unable to remove file " << m_fname << std::endl;
+    LOG << "Unable to remove file " << m_fname << std::endl;
   }
 }
 
@@ -110,7 +110,7 @@ bool File::move (const std::string& NewFileName)
 
 #endif /* _WIN32 */
 
-    DLOG() << "Unable move file " << m_fname << std::endl;
+    LOG << "Unable move file " << m_fname << std::endl;
     return false;
   }
   m_fname.assign(NewFileName);
@@ -182,7 +182,7 @@ int File::write (File::Handle Hndl, const void* Buffer, const size_t Length)
 
 #endif /* _WIN32 */
 
-    DLOG() << "Error writing to file." << std::endl;
+    LOG << "Error writing to file." << std::endl;
     return IOError;
   }
   return static_cast<int>(return_value);

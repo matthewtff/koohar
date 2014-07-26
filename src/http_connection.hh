@@ -7,8 +7,6 @@
 #include <string>
 
 #include <boost/asio.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include "server_config.hh"
 #include "request.hh"
@@ -17,12 +15,12 @@ namespace koohar {
 
 class Response;
 
-class HttpConnection : public boost::enable_shared_from_this<HttpConnection>
+class HttpConnection : public std::enable_shared_from_this<HttpConnection>
 {
 public:
   static const unsigned int MaxRequestSize = 65536; // 64KB
 
-  typedef boost::shared_ptr<HttpConnection> Pointer;
+  typedef std::shared_ptr<HttpConnection> Pointer;
 
   typedef std::function<void(koohar::Request&, koohar::Response&)> UserFunc;
 
@@ -51,7 +49,6 @@ private:
                   const std::size_t BytesTransferred);
   void handleWrite(const boost::system::error_code& Error,
                    const std::size_t BytesTransferred);
-private:
 private:
   ServerConfig m_config;
   boost::asio::ip::tcp::socket m_socket;
