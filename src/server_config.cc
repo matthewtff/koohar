@@ -9,60 +9,73 @@
 #include "base/utils.hh"
 #include "request.hh"
 
+namespace {
+const char kCode[] = "code";
+const char kErrorPages[] = "error_pages";
+const char kPath[] = "path";
+const char kPublicDir[] = "public_dir";
+const char kPublicURLs[] = "public_urls";
+const char kUseSSL[] = "use_ssl";
+}  // anonymous namespace
+
 namespace koohar {
 
-bool ServerConfig::isStaticUrl(const Request& req) const {
-  return m_static_urls.cend() !=
-  std::find_if(m_static_urls.cbegin(),
-               m_static_urls.cend(),
-               std::bind(&Request::corresponds,
-                         &req,
-                         std::placeholders::_1));
+bool ServerConfig::IsStaticUrl(const Request& req) const {
+  return static_urls_.cend() != std::find_if(
+      static_urls_.cbegin(),
+      static_urls_.cend(),
+      std::bind(&Request::Corresponds, &req, std::placeholders::_1));
 }
 
-void ServerConfig::load(const std::string& file_name) {
-  std::ifstream f(file_name.c_str());
-  if (!f)
+void ServerConfig::Load(const std::string& file_name) {
+  std::ifstream input(file_name.c_str());
+  if (!input) {
     return;
-  const std::string contents((std::istreambuf_iterator<char>(f)),
+  }
+  const std::string contents((std::istreambuf_iterator<char>(input)),
                              std::istreambuf_iterator<char>());
 
-  JSON::Object config = JSON::parse(contents);
+  JSON::Object config = JSON::Parse(contents);
 
-  if (config["public_dir"].type() == JSON::Type::String)
-    setStaticDir(config["public_dir"].getString());
+  if (config[kPublicDir].type() == JSON::Type::String) {
+    set_static_dir(config[kPublicDir].GetString());
+  }
 
-  if (config["use_ssl"].type() == JSON::Type::Boolean)
-    setUseSSL(config["use_ssl"].getBoolean());
+  if (config[kUseSSL].type() == JSON::Type::Boolean) {
+    set_use_ssl(config[kUseSSL].GetBoolean());
+  }
 
-  if (config["public_urls"].type() == JSON::Type::Array) {
-    const auto& urls = config["public_urls"].getArray();
+  if (config[kPublicURLs].type() == JSON::Type::Array) {
+    const auto& urls = config[kPublicURLs].GetArray();
     for (const JSON::Object& url : urls) {
-      if (url.type() == JSON::Type::String)
-        setStaticUrl(url.getString());
+      if (url.type() == JSON::Type::String) {
+        AddStaticUrl(url.GetString());
+      }
     }
   }
 
-  if (config["error_pages"].type() == JSON::Type::Array) {
-    auto& pages = config["error_pages"].getArray();
+  if (config[kErrorPages].type() == JSON::Type::Array) {
+    auto& pages = config[kErrorPages].GetArray();
     for (JSON::Object& page : pages) {
-      if (page.type() != JSON::Type::Collection)
+      if (page.type() != JSON::Type::Collection) {
         continue;
+      }
 
-      if (page["code"].type() == JSON::Type::Integer &&
-          page["path"].type() == JSON::Type::String) {
-        const long code = page["code"].getInteger();
-        m_error_pages[code] = page["path"].getString();
+      if (page[kCode].type() == JSON::Type::Integer &&
+          page[kPath].type() == JSON::Type::String) {
+        const long code = page[kCode].GetInteger();
+        error_pages_[code] = page[kPath].GetString();
       }
     }
   }
 }
 
-std::string ServerConfig::getErrorPage(const unsigned short code) const {
-  const ErrorPagesMap::const_iterator page_iterator = m_error_pages.find(code);
-  if (page_iterator != m_error_pages.end())
+std::string ServerConfig::GetErrorPage(const unsigned short code) const {
+  const ErrorPagesMap::const_iterator page_iterator = error_pages_.find(code);
+  if (page_iterator != error_pages_.cend()) {
     return page_iterator->second;
+  }
   return std::string();
 }
 
-} // namespace koohar
+}  // namespace koohar

@@ -16,26 +16,25 @@ class UriParser {
 
   UriParser& operator=(UriParser&&) = default;
 
-  bool parse (const std::string& uri);
-  std::string scheme () const { return m_scheme; }
-  std::string authority () const { return m_authority; }
-  std::string path () const { return m_path; }
-  std::string query () const { return m_query; }
-  std::string fragment () const { return m_fragment; }
+  bool Parse(const std::string& uri);
+  std::string Body(const std::string& query_name) const;
 
-  std::string body (const std::string& QueryName);
+  std::string scheme() const { return scheme_; }
+  std::string authority() const { return authority_; }
+  std::string path() const { return path_; }
+  std::string query() const { return query_; }
+  std::string fragment() const { return fragment_; }
 
  protected:
-  void parseQuery (const std::string& QueryString);
+  void ParseQuery(const std::string& query_string);
 
-  StringMap m_queries;
+  StringMap queries_;
 
- private:
-  std::string m_scheme;
-  std::string m_authority;
-  std::string m_path;
-  std::string m_query;
-  std::string m_fragment;
+  std::string scheme_;
+  std::string authority_;
+  std::string path_;
+  std::string query_;
+  std::string fragment_;
 };  // class UriParser
 
 }  // namespace koohar

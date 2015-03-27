@@ -5,11 +5,14 @@
 #include <string>
 
 #include "base/file.hh"
-#include "base/json.hh"
 #include "base/utils.hh"
 #include "http_connection.hh"
 
 namespace koohar {
+
+namespace JSON {
+class Object;
+};
 
 class Sender;
 
@@ -32,84 +35,87 @@ class Response {
   /**
    * Sets and sends appropriate http status to client.
    */
-  void writeHead(const unsigned short State);
+  void WriteHead(const unsigned short State);
 
   /**
    * Sets header. Can be called multiple times. If Replace set to false, the
    * value whould be added using semicolon (or how do call that ';' ?).
    */
-  void header(const std::string& HeaderName,
-              const std::string& HeaderValue,
-              const bool Replace = true);
+  void Header(const std::string& header_name,
+              const std::string& header_value,
+              const bool replace);
+
+  void Header(const std::string& header_name,
+              const std::string& header_value) {
+    Header(header_name, header_value, true);
+  }
 
   /**
-   * Calls header() method using 'Set-Cookie' HeaderName.
+   * Calls Header() method using 'Set-Cookie' as header name.
    * Be carefull on using.
    */
-  bool cookie(const std::string& CookieName,
-              const std::string& CookieValue);
-
-  void body (const std::string& String);
+  bool Cookie(const std::string& cookie_name,
+              const std::string& cookie_value);
 
   /**
    * Send some data. Can be called multiple times.
    */
-  void body(const void* Buffer, const off_t BufferSize);
+  void Body(const void* buffer, const off_t buffer_size);
+  void Body(const std::string& data);
 
   /**
-   * Cannot be used whith body() method. After using you still should call
-   * the end() method.
+   * Cannot be used whith Body() method. After using you still should call
+   * the End() method.
    */
-  bool sendFile(File::Handle FileHandle,
+  bool SendFile(File::Handle file_handle,
                 const off_t Size,
                 const off_t Offset);
-
-  void end (const std::string& String);
 
   /**
    * Terminates connection to client.
    */
-  void end(const void* Buffer, const off_t BufferSize);
-
-  void end();
+  void End(const void* buffer, const off_t buffer_size);
+  void End(const std::string& data);
+  void End();
 
   /**
    * Sends redirecting header and 302 (Redirect) status. You stll can send
-   * some data using body() method and even set additional headers. Do not
-   * forget to close connection using end().
+   * some data using Body() method and even set additional headers. Do not
+   * forget to close connection using End().
    */
-  void redirect (const std::string& Url);
+  void Redirect(const std::string& url);
 
-  void sendJSON (const JSON::Object& Obj);
+  void SendJSON(const JSON::Object& object);
 
-  void badRequest ();
+  void BadRequest();
 
-private:
+  bool IsComplete() const { return connection_->closed(); }
+
+ private:
   /**
-   * body() and end() methods have some identical code, so it moved to
+   * Body() and End() methods have some identical code, so it moved to
    * private method.
    */
-  void transfer(const void* Buffer, const off_t BufferSize);
+  void Transfer(const void* buffer, const off_t buffer_size);
 
   template <size_t N>
-  void transferString(const char (&Str) [N]) {
-    transfer(reinterpret_cast<const void*>(Str),
+  void TransferString(const char (&Str) [N]) {
+    Transfer(reinterpret_cast<const void*>(Str),
              static_cast<off_t>(string_length(Str)));
   }
 
   /**
    * This method handle '\n\r' sending after headers part and setting
-   * appropriate value to m_headers_allowed variable.
+   * appropriate value to |headers_allowed_| variable.
    */
-  void sendHeaders();
+  void SendHeaders();
 
-private:
-  StringMap m_headers;
-  bool m_headers_allowed; // Set to true, till any part of body is sent.
+  StringMap headers_;
+  bool headers_allowed_;  // Set to true, till any part of body is sent.
   
-  HttpConnection::Pointer m_connection;
-}; // class Response
+  HttpConnection::Pointer connection_;
+};  // class Response
 
-}; // namespace koohar
+}  // namespace koohar
 
 #endif // koohar_response_hh

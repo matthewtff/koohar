@@ -14,24 +14,24 @@ class StaticTransfer {
                  const ServerConfig& config);
   void Serve();
 
- public:
-  static const StringMap mime_types_;
+  static const StringMap& mime_type() { return mime_types_; }
 
  private:
   /**
    * If size of static file large then this it partially.
    * TODO(matthew): Make this constant configurable.
    */
-  static const unsigned int MaxStaticSize = 16777216; // 16 MB
+  static const unsigned int kMaxStaticSize = 16777216; // 16 MB
 
-  bool isVulnerable(const std::string& FileName);
-  void handleError(const unsigned short Code);
+  static const StringMap mime_types_;
+
+  bool IsVulnerable(const std::string& FileName);
+  void HandleError(const unsigned short Code);
   std::string MimeFromName(const std::string& FileName);
 
- private:
-  Request m_request;
-  Response m_response;
-  ServerConfig m_config;
+  Request request_;
+  Response response_;
+  ServerConfig config_;
 };  // class StaticTransfer
 
 }  // namespace koohar

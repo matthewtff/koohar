@@ -12,49 +12,52 @@ using boost::asio::ip::tcp;
 
 namespace koohar {
 
-HttpConnection::Pointer HttpConnection::create (
-    boost::asio::io_service& IoService,
-    UserFunc UserCallFunction,
-    const ServerConfig& Config) {
-  return Pointer(new HttpConnection(IoService, UserCallFunction, Config));
+HttpConnection::Pointer HttpConnection::Create (
+    boost::asio::io_service& io_service,
+    UserFunc user_call_function,
+    const ServerConfig& config) {
+  return Pointer(new HttpConnection(io_service, user_call_function, config));
 }
 
-void HttpConnection::start () {
-  m_socket.async_read_some (
-      boost::asio::buffer(m_request_buffer, MaxRequestSize),
-      std::bind(&HttpConnection::handleRead,
+void HttpConnection::Start() {
+  socket_.async_read_some (
+      boost::asio::buffer(request_buffer_, kMaxRequestSize),
+      std::bind(&HttpConnection::HandleRead,
                 shared_from_this(),
                 std::placeholders::_1,
                 std::placeholders::_2));
 }
 
-void HttpConnection::write (const char* Data, std::size_t Size) {
-  if (!Data || !Size)
+void HttpConnection::Write(const char* data, std::size_t size) {
+  if (!data || !size) {
     return;
+  }
 
-  if (m_close_socket) {
+  if (close_socket_) {
     LOG << "HttpConnection[write_error]: Writing to socket after close";
   }
 
-  m_buffers.emplace_back(Data, Data + Size);
+  buffers_.emplace_back(data, data + size);
 
   boost::asio::async_write(
-      m_socket,
-      boost::asio::buffer(*(m_buffers.rbegin())),
-      std::bind(&HttpConnection::handleWrite,
+      socket_,
+      boost::asio::buffer(*(buffers_.rbegin())),
+      std::bind(&HttpConnection::HandleWrite,
                 shared_from_this(),
                 std::placeholders::_1,
                 std::placeholders::_2));
 
-  ++m_writing_operations;
+  ++writing_operations_;
 }
 
-void HttpConnection::setUserFunction (UserFunc UserCallFunction) {
-  m_user_call_function = UserCallFunction;
+void HttpConnection::Close() {
+  close_socket_ = true;
+  if (writing_operations_ == 0) {
+    socket_.close();
+  }
 }
 
 HttpConnection::~HttpConnection() {
-  LOG << "HttpConnection::~HttpConnection() " << url_ << std::endl;
 }
 
 // private
@@ -62,50 +65,57 @@ HttpConnection::~HttpConnection() {
 HttpConnection::HttpConnection(boost::asio::io_service& io_service,
                                UserFunc user_call_function,
                                const ServerConfig& config)
-    : m_config(config),
-      m_socket(io_service),
-      m_user_call_function(user_call_function),
-      m_writing_operations(0),
-      m_close_socket(false) {
+    : config_(config),
+      socket_(io_service),
+      user_call_function_(user_call_function),
+      writing_operations_(0),
+      close_socket_(false) {
 }
 
-void HttpConnection::handleRead (const boost::system::error_code& Error,
-                                 const std::size_t BytesTransferred) {
-  if (Error)
+void HttpConnection::HandleRead(const boost::system::error_code& error,
+                                const std::size_t bytes_transferred) {
+  if (error) {
     return;
-
-  Response res{shared_from_this()};
-  res.header("Server", "koohar");
-
-  if (!m_request.update(m_request_buffer, BytesTransferred)) {
-    res.writeHead(m_request.errorCode());
-    res.end();
-    return;
-  } else if (!m_request.IsComplete()) {
-    return start();
   }
 
-  url_ = m_request.uri();
+  Response res{shared_from_this()};
+  res.Header("Server", "koohar");
 
-  if (m_config.isStaticUrl(m_request)) {
-    StaticTransfer static_transfer{std::move(m_request), std::move(res), m_config};
+  if (!request_.Update(request_buffer_, bytes_transferred)) {
+    res.WriteHead(request_.error_code());
+    res.End();
+    return;
+  } else if (!request_.IsComplete()) {
+    return Start();
+  }
+
+  url_ = request_.uri();
+
+  if (config_.IsStaticUrl(request_)) {
+    StaticTransfer static_transfer{std::move(request_),
+                                   std::move(res),
+                                   config_};
     static_transfer.Serve();
-  } else if (m_user_call_function) {
-    m_user_call_function(std::move(m_request), std::move(res));
+  } else if (user_call_function_) {
+    user_call_function_(std::move(request_), std::move(res));
   } else {
+    // TODO(matthewtff): Implement default callback to close connections.
     LOG << "HttpConnection[callback_error] : Callback was not set";
   }
 }
 
-void HttpConnection::handleWrite (const boost::system::error_code& Error,
-                                  const std::size_t BytesTransferred) {
-  if (!Error && BytesTransferred == 0)
+void HttpConnection::HandleWrite(const boost::system::error_code& error,
+                                 const std::size_t bytes_transferred) {
+  if (!error && bytes_transferred == 0) {
     LOG << "HttpConnection[write_error] : transferred 0 bytes";
+  }
 
-  if (m_writing_operations > 0)
-    --m_writing_operations;
-  if (m_close_socket && m_writing_operations == 0)
-    m_socket.close();
+  if (writing_operations_ > 0) {
+    --writing_operations_;
+  }
+  if (close_socket_ && writing_operations_ == 0) {
+    socket_.close();
+  }
 }
 
 } // namespace koohar

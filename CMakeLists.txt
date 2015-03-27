@@ -1,7 +1,7 @@
 cmake_minimum_required ( VERSION 2.6 )
 project (koohar)
 
-set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
+SET(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR
     ${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
@@ -9,22 +9,38 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR
 
   SET (warnings "-Wall -Wextra -Woverloaded-virtual -Werror")
 
-  SET (common_flags "-std=c++0x -stdlib=libc++ -fPIC")
+  SET (common_flags "-std=c++0x -fPIC")
+
+  if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR
+      ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
+    SET (clang_flags "-stdlib=libc++")
+  endif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR
+         ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
 
   SET (CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} ${warnings} ${common_flags}"
+    "${CMAKE_CXX_FLAGS} ${warnings} ${common_flags} ${clang_flags}"
   )
 
   SET (CMAKE_CXX_FLAGS_DEBUG
-    "${CMAKE_CXX_FLAGS_DEBUG} ${warnings} ${common_flags} -g -ggdb"
+    "${CMAKE_CXX_FLAGS_DEBUG} ${warnings} ${common_flags} ${clang_flags} -g -ggdb"
   )
 
   SET (CMAKE_CXX_FLAGS_RELEASE
-    "${CMAKE_CXX_FLAGS_RELEASE} ${warnings} ${common_flags} -O2"
+    "${CMAKE_CXX_FLAGS_RELEASE} ${warnings} ${common_flags} ${clang_flags} -O2"
+  )
+
+  SET (koohar_platform_base
+    src/base/file_posix.cc
+    src/base/filemapping_posix.cc
   )
 
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
   
+  SET (koohar_platform_base
+    src/base/file_win.cc
+    src/base/filemapping_win.cc
+  )
+
 endif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR
        ${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR
        ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
@@ -32,7 +48,7 @@ endif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 include_directories (
-	/opt/local/include
+  /opt/local/include
 )
 
 endif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -41,15 +57,14 @@ include_directories (
   ${CMAKE_SOURCE_DIR}/src
 )
 
-set ( koohar_base
+SET ( koohar_base
+  ${koohar_platform_base}
   src/base/date.cc
-  src/base/file.cc
-  src/base/filemapping.cc
   src/base/json.cc
   src/base/utils.cc
 )
 
-set ( koohar_src
+SET ( koohar_src
   ${koohar_base}
   src/http_connection.cc
   src/http_parser.cc

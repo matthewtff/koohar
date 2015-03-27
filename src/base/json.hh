@@ -19,115 +19,109 @@ enum class Type {
   Float,
   String,
   Array,
-  Collection
+  Collection,
 };
 
 class Object {
-public:
-
-  Object ()
-      : m_state(OnValue),
-      m_type(Type::Undefined),
-      m_boolean(false),
-      m_integer(0L),
-      m_float(.0)
-  {}
-
-  explicit Object(const bool Bool)
-      : m_state(OnSuccess),
-      m_type(Type::Boolean),
-      m_boolean(Bool),
-      m_integer(0L),
-      m_float(.0)
-  {}
-
-  explicit Object(const long Int)
-      : m_state(OnSuccess),
-      m_type(Type::Integer),
-      m_boolean(false),
-      m_integer(Int),
-      m_float(.0)
-  {}
-
-  explicit Object(const double Floating)
-      : m_state(OnSuccess),
-      m_type(Type::Float),
-      m_boolean(false),
-      m_integer(0L),
-      m_float(Floating)
-  {}
-
-  explicit Object(const std::string& Str)
-      : m_state(OnSuccess),
-      m_type(Type::String),
-      m_boolean(false),
-      m_integer(0L),
-      m_float(.0),
-      m_string(Str)
-  {}
-
-  Type type() const { return m_type; }
-  bool hasType(const Type SomeType) const { return SomeType == m_type; }
-
-  bool& getBoolean() { return m_boolean; }
-  bool getBoolean() const { return m_boolean; }
-  bool setBoolean (const bool Bool);
-
-  long& getInteger() { return m_integer; }
-  long getInteger() const { return m_integer; }
-  bool setInteger (const long Int);
-  template <typename Trivial>
-  bool setTrivial(Trivial Value, std::true_type, std::false_type);
-
-  double& getFloat() { return m_float; }
-  double getFloat() const { return m_float; }
-  bool setFloat (const double Floating);
-  template <typename Trivial>
-  bool setTrivial(Trivial Value, std::false_type, std::true_type) {
-    return setFloat(static_cast<double>(Value));
+ public:
+  Object () : state_(OnValue),
+              type_(Type::Undefined),
+              boolean_(false),
+              integer_(0L),
+              float_(.0f) {
   }
 
-  std::string& getString() { return m_string; }
-  const std::string& getString() const { return m_string; }
-  bool setString (const std::string& Str);
-  template <typename Trivial>
-  bool setTrivial(Trivial Value, std::false_type, std::false_type) {
-    return setString(std::string(Value));
+  explicit Object(const bool Bool) : state_(OnSuccess),
+                                     type_(Type::Boolean),
+                                     boolean_(Bool),
+                                     integer_(0L),
+                                     float_(.0f) {
   }
 
-  void clear();
+  explicit Object(const long Int) : state_(OnSuccess),
+                                    type_(Type::Integer),
+                                    boolean_(false),
+                                    integer_(Int),
+                                    float_(.0f) {
+  }
+
+  explicit Object(const double Floating) : state_(OnSuccess),
+                                           type_(Type::Float),
+                                           boolean_(false),
+                                           integer_(0L),
+                                           float_(Floating) {
+  }
+
+  explicit Object(const std::string& Str) : state_(OnSuccess),
+                                            type_(Type::String),
+                                            boolean_(false),
+                                            integer_(0L),
+                                            float_(.0f),
+                                            string_(Str) {
+  }
+
+  Type type() const { return type_; }
+  bool HasType(const Type SomeType) const { return SomeType == type_; }
+
+  bool& GetBoolean() { return boolean_; }
+  bool GetBoolean() const { return boolean_; }
+  bool SetBoolean(const bool Bool);
+
+  long& GetInteger() { return integer_; }
+  long GetInteger() const { return integer_; }
+  bool SetInteger(const long Int);
+  template <typename Trivial>
+  bool SetTrivial(Trivial Value, std::true_type, std::false_type);
+
+  double& GetFloat() { return float_; }
+  double GetFloat() const { return float_; }
+  bool SetFloat(const double Floating);
+  template <typename Trivial>
+  bool SetTrivial(Trivial Value, std::false_type, std::true_type) {
+    return SetFloat(static_cast<double>(Value));
+  }
+
+  std::string& GetString() { return string_; }
+  const std::string& GetString() const { return string_; }
+  bool SetString(const std::string& Str);
+  template <typename Trivial>
+  bool SetTrivial(Trivial Value, std::false_type, std::false_type) {
+    return SetString(std::string(Value));
+  }
+
+  void Clear();
   template <typename Trivial>
   Object& operator=(const Trivial Value);
 
-  std::vector<Object>& getArray() { return m_array; }
-  const std::vector<Object>& getArray() const { return m_array; }
-  bool setArray (const std::vector<Object>& Objects);
-  bool addToArray (const Object& Obj);
-  bool remove (const std::size_t Index);
+  std::vector<Object>& GetArray() { return array_; }
+  const std::vector<Object>& GetArray() const { return array_; }
+  bool SetArray(const std::vector<Object>& Objects);
+  bool AddToArray(const Object& Obj);
+  bool Remove(const std::size_t Index);
   Object& operator[](const std::size_t Index);
 
-  std::map<std::string, Object>& getCollection() { return m_collection; }
-  const std::map<std::string, Object>& getcollection() const {
-    return m_collection;
+  std::map<std::string, Object>& GetCollection() { return collection_; }
+  const std::map<std::string, Object>& Getcollection() const {
+    return collection_;
   }
-  bool setCollection (const std::map<std::string, Object>& ObjCollection);
-  bool addToCollection (const std::string& Name, const Object& Obj);
-  bool remove (const std::string& Name);
+  bool SetCollection(const std::map<std::string, Object>& ObjCollection);
+  bool AddToCollection(const std::string& Name, const Object& Obj);
+  bool Remove(const std::string& Name);
   Object& operator[](const std::string& Name);
 
-  bool empty () const {
-    return m_state == OnValue && m_type == Type::Undefined;
+  bool Empty() const {
+    return state_ == OnValue && type_ == Type::Undefined;
   }
-  std::string toString() const;
-  std::size_t parse(const std::string &Stream);
-  bool errorParsing () const { return m_state != OnSuccess; }
+  std::string ToString() const;
+  std::size_t Parse(const std::string &Stream);
+  bool ErrorParsing() const { return state_ != OnSuccess; }
 
-private:
+ private:
   template <typename Type>
-  class is_boolean {
+  class IsBoolean {
   public:
     static const bool value = false;
-  }; // class is_boolean<Type>
+  }; // class IsBoolean<Type>
 
   enum State {
     OnValue,
@@ -137,72 +131,65 @@ private:
     OnColon,
     OnCollectionObject,
     OnSuccess,
-    OnError
+    OnError,
   }; // enum State
 
-private:
-  void checkUndefined (const Type SetType) {
-    if (m_type == Type::Undefined)
-      m_type = SetType;
+  void SetTypeIfUndefined(const Type type) {
+    if (type_ == Type::Undefined) {
+      type_ = type;
+    }
   }
   template <typename Trivial>
-  std::string trivialToString(const Trivial& Value) const {
+  std::string TrivialToString(const Trivial& value) const {
     std::stringstream stream;
-    stream << Value;
+    stream << value;
     return stream.str();
   }
-  std::string stringToString() const;
-  std::string arrayToString() const;
-  std::string collectionToString() const;
-  static bool isSeporator (const char Ch);
-  static bool isBoolean (const std::string& Token);
-  static bool isInteger (const std::string& Token);
-  static bool isFloat (const std::string& Token);
-  static bool isString (const std::string& Token);
+  std::string StringToString() const;
+  std::string ArrayToString() const;
+  std::string CollectionToString() const;
 
-  void parseValue (const std::string& Stream, std::size_t& Parsed);
-  void parseArrayObject (const std::string& Stream, std::size_t& Parsed);
-  void parseComma (const std::string& Stream, std::size_t& Parsed);
-  void parseName (const std::string& Stream, std::size_t& Parsed);
-  void parseColon (const std::string& Stream, std::size_t& Parsed);
-  void parseCollectionObject (const std::string& Stream,
-                              std::size_t& Parsed);
+  void ParseValue(const std::string& stream, std::size_t& parsed);
+  void ParseArrayObject(const std::string& stream, std::size_t& parsed);
+  void ParseComma(const std::string& stream, std::size_t& parsed);
+  void ParseName(const std::string& stream, std::size_t& parsed);
+  void ParseColon(const std::string& stream, std::size_t& parsed);
+  void ParseCollectionObject(const std::string& stream, std::size_t& parsed);
 
-private:
-  State m_state;
-  std::string m_token;
-  Type m_type;
-  bool m_boolean;
-  long m_integer;
-  double m_float;
-  std::string m_string;
-  std::vector<Object> m_array;
-  std::map<std::string, Object> m_collection;
+  State state_;
+  std::string token_;
+  Type type_;
+  bool boolean_;
+  long integer_;
+  double float_;
+  std::string string_;
+  std::vector<Object> array_;
+  std::map<std::string, Object> collection_;
 }; // class Object
 
 template <>
-class Object::is_boolean<bool> {
+class Object::IsBoolean<bool> {
 public:
   static const bool value = true;
-}; // class is_boolean<bool>
+}; // class IsBoolean<bool>
 
 template <typename Trivial>
-bool Object::setTrivial(Trivial Value, std::true_type, std::false_type) {
-  if (is_boolean<Trivial>::value)
-    return setBoolean(Value);
-  return setInteger(static_cast<long>(Value));
+bool Object::SetTrivial(Trivial value, std::true_type, std::false_type) {
+  if (IsBoolean<Trivial>::value) {
+    return SetBoolean(value);
+  }
+  return SetInteger(static_cast<long>(value));
 }
 
 template <typename Trivial>
-Object& Object::operator = (const Trivial Value)
-{
-   setTrivial(Value, typename std::is_integral<Trivial>::type(),
+Object& Object::operator = (const Trivial value) {
+   SetTrivial(value, typename std::is_integral<Trivial>::type(),
      typename std::is_floating_point<Trivial>::type());
    return *this;
 }
 
-std::string strigify(const Object& Obj);
-Object parse(const std::string& Stream);
+std::string Stringify(const Object& object);
+Object Parse(const std::string& stream);
 
 } // namespace JSON
 

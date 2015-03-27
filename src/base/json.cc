@@ -1,365 +1,399 @@
 #include "base/json.hh"
 
-#include <map>
-#include <vector>
-#include <string>
-#include <cstddef>
-#include <sstream>
+#include <algorithm>
 #include <cctype>
+#include <cstddef>
+#include <map>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include "base/utils.hh"
 
 namespace koohar {
 
+namespace {
+
+bool IsSeporator(const char ch) {
+  static const char kSeporators[] = {',', ':', '{', '}', '[', ']'};
+  static const char* kSeporatorsEnd = kSeporators + array_size(kSeporators); 
+  if (std::isspace(ch)) {
+    return true;
+  }
+  const char* character = std::find(kSeporators, kSeporatorsEnd, ch);
+  return character != kSeporatorsEnd;
+}
+
+bool IsBoolean(const std::string &token) {
+  return (token == "true") || (token == "false");
+}
+
+bool IsInteger(const std::string &token) {
+  for (std::size_t index = 0; index < token.size(); ++index) {
+    if (index == 0 && token[0] == '-') {
+      continue;
+    }
+    if (!std::isdigit(token[index])) {
+      return false;
+    }
+  }
+  return !token.empty();
+}
+
+bool IsFloat(const std::string& token) {
+  bool was_dot = false;
+  for (std::size_t index = 0; index < token.size(); ++index) {
+    const char ch = token[index];
+    if (index == 0 && ch == '-') {
+      continue;
+    }
+    if (!std::isdigit(ch)) {
+      if (ch != '.' || was_dot) {
+        return false;
+      }
+      was_dot = true;
+    }
+  }
+  return !token.empty();
+}
+
+bool IsString(const std::string& token) {
+  if (token.empty()) {
+    return false;
+  }
+  return token[0] == '"' && token[token.length() - 1] == '"';
+}
+
+}  // anonymous namespace
+
 namespace JSON {
 
-bool Object::setBoolean(const bool Bool) {
-  checkUndefined(Type::Boolean);
-  if (!hasType(Type::Boolean))
+bool Object::SetBoolean(const bool boolean) {
+  SetTypeIfUndefined(Type::Boolean);
+  if (!HasType(Type::Boolean)) {
     return false;
-  m_boolean = Bool;
+  }
+  boolean_ = boolean;
   return true;
 }
 
-bool Object::setInteger(const long Int) {
-  checkUndefined(Type::Integer);
-  if (!hasType(Type::Integer))
+bool Object::SetInteger(const long integer) {
+  SetTypeIfUndefined(Type::Integer);
+  if (!HasType(Type::Integer)) {
     return false;
-  m_integer = Int;
+  }
+  integer_ = integer;
   return true;
 }
 
-bool Object::setFloat(const double Floating) {
-  checkUndefined(Type::Float);
-  if (!hasType(Type::Float))
+bool Object::SetFloat(const double floating) {
+  SetTypeIfUndefined(Type::Float);
+  if (!HasType(Type::Float)) {
     return false;
-  m_float = Floating;
+  }
+  float_ = floating;
   return true;
 }
 
-bool Object::setString(const std::string& Str) {
-  checkUndefined(Type::String);
-  if (!hasType(Type::String))
+bool Object::SetString(const std::string& str) {
+  SetTypeIfUndefined(Type::String);
+  if (!HasType(Type::String)) {
     return false;
-  m_string = Str;
+  }
+  string_ = str;
   return true;
 }
 
-void Object::clear() {
-  m_state = OnValue;
-  m_type = Type::Undefined;
-  m_boolean = false;
-  m_integer = 0L;
-  m_float = .0;
-  m_string.clear();
-  m_array.clear();
-  m_collection.clear();
+void Object::Clear() {
+  state_ = OnValue;
+  type_ = Type::Undefined;
+  boolean_ = false;
+  integer_ = 0L;
+  float_ = .0;
+  string_.clear();
+  array_.clear();
+  collection_.clear();
 }
 
-bool Object::setArray(const std::vector<Object>& Objects) {
-  checkUndefined(Type::Array);
-  if (!hasType(Type::Array))
+bool Object::SetArray(const std::vector<Object>& objects) {
+  SetTypeIfUndefined(Type::Array);
+  if (!HasType(Type::Array)) {
     return false;
-  m_array = Objects;
+  }
+  array_ = objects;
   return true;
 }
 
-bool Object::addToArray(const Object &Obj) {
-  checkUndefined(Type::Array);
-  if (!hasType(Type::Array))
+bool Object::AddToArray(const Object &obj) {
+  SetTypeIfUndefined(Type::Array);
+  if (!HasType(Type::Array)) {
     return false;
-  m_array.push_back(Obj);
+  }
+  array_.push_back(obj);
   return true;
 }
 
-bool Object::remove(const std::size_t Index) {
-  if (!hasType(Type::Array))
+bool Object::Remove(const std::size_t index) {
+  if (!HasType(Type::Array)) {
     return false;
-  if (Index >= m_array.size())
+  }
+  if (index >= array_.size()) {
     return false;
-  m_array.erase(m_array.begin() + Index);
+  }
+  array_.erase(array_.begin() + index);
   return false;
 }
 
-Object& Object::operator [](const std::size_t Index) {
-  if (!hasType(Type::Array))
+Object& Object::operator [](const std::size_t index) {
+  if ((!HasType(Type::Array)) || (index >= array_.size())) {
     return *this;
-  if (Index >= m_array.size())
-    return *this;
-  return m_array[Index];
+  }
+  return array_[index];
 }
 
-bool Object::setCollection(const std::map<std::string, Object>& ObjCollection) {
-  checkUndefined(Type::Collection);
-  if (!hasType(Type::Collection))
+bool Object::SetCollection(
+    const std::map<std::string, Object>& objects_collection) {
+  SetTypeIfUndefined(Type::Collection);
+  if (!HasType(Type::Collection)) {
     return false;
-  m_collection = ObjCollection;
+  }
+  collection_ = objects_collection;
   return true;
 }
 
-bool Object::addToCollection(const std::string& Name, const Object& Obj) {
-  checkUndefined(Type::Collection);
-  if (!hasType(Type::Collection))
+bool Object::AddToCollection(const std::string& name, const Object& obj) {
+  SetTypeIfUndefined(Type::Collection);
+  if (!HasType(Type::Collection)) {
     return false;
-  m_collection[Name] = Obj;
+  }
+  collection_[name] = obj;
   return true;
 }
 
-bool Object::remove(const std::string &Name) {
-  if (!hasType(Type::Collection))
+bool Object::Remove(const std::string &name) {
+  if (!HasType(Type::Collection)) {
     return false;
-  m_collection.erase(Name);
+  }
+  collection_.erase(name);
   return true;
 }
 
-Object& Object::operator [](const std::string& Name) {
-  checkUndefined(Type::Collection);
-  if (!hasType(Type::Collection))
+Object& Object::operator [](const std::string& name) {
+  SetTypeIfUndefined(Type::Collection);
+  if (!HasType(Type::Collection)) {
     return *this;
-  return m_collection[Name];
+  }
+  return collection_[name];
 }
 
-std::string Object::toString() const {
+std::string Object::ToString() const {
   switch (type()) {
     case Type::Undefined: return "undefined";
-    case Type::Boolean: return m_boolean ? "true" : "false";
-    case Type::Integer: return trivialToString(m_integer);
-    case Type::Float: return trivialToString(m_float);
-    case Type::String: return stringToString();
-    case Type::Array: return arrayToString();
-    case Type::Collection: return collectionToString();
+    case Type::Boolean: return boolean_ ? "true" : "false";
+    case Type::Integer: return TrivialToString(integer_);
+    case Type::Float: return TrivialToString(float_);
+    case Type::String: return StringToString();
+    case Type::Array: return ArrayToString();
+    case Type::Collection: return CollectionToString();
     default: NOTREACHED();
   }
 }
 
-std::size_t Object::parse(const std::string& Stream) {
-  if (!empty())
+std::size_t Object::Parse(const std::string& stream) {
+  if (!Empty()) {
     return 0;
+  }
   std::size_t parsed = 0;
-  while (m_state != OnSuccess && m_state != OnError) {
-    switch (m_state) {
+  while (state_ != OnSuccess && state_ != OnError) {
+    switch (state_) {
       case OnValue:
-        parseValue(Stream, parsed);
+        ParseValue(stream, parsed);
       break;
       case OnArrayObject:
-        parseArrayObject(Stream, parsed);
+        ParseArrayObject(stream, parsed);
       break;
       case OnComma:
-        parseComma(Stream, parsed);
+        ParseComma(stream, parsed);
       break;
       case OnName:
-        parseName(Stream, parsed);
+        ParseName(stream, parsed);
       break;
       case OnColon:
-        parseColon(Stream, parsed);
+        ParseColon(stream, parsed);
       break;
       case OnCollectionObject:
-        parseCollectionObject(Stream, parsed);
+        ParseCollectionObject(stream, parsed);
       break;
       default:
-        m_state = OnError;
+        state_ = OnError;
     }
   }
   return parsed;
 }
 
-std::string Object::stringToString() const {
+std::string Object::StringToString() const {
   std::stringstream stream;
   stream << "\"";
-  for (std::size_t index = 0; index < m_string.length(); ++index)
-    if (m_string[index] == '"')
+  std::for_each(string_.begin(), string_.end(), [&stream](const char ch) {
+    if (ch == '"') {
       stream << '\\' << '"';
-    else
-      stream << m_string[index];
+    } else {
+      stream << ch;
+    }
+  });
   stream << "\"";
   return stream.str();
 }
 
-std::string Object::arrayToString() const {
+std::string Object::ArrayToString() const {
   std::stringstream stream;
   stream << "[";
-  for (size_t index = 0; index < m_array.size(); ++index) {
+  for (size_t index = 0; index < array_.size(); ++index) {
     if (0 != index)
       stream << ",";
-    stream << m_array[index].toString();
+    stream << array_[index].ToString();
   }
   stream << "]";
   return stream.str();
 }
 
-std::string Object::collectionToString() const {
+std::string Object::CollectionToString() const {
   std::stringstream stream;
   stream << "{";
-  for (auto obj = m_collection.begin(); obj != m_collection.end(); ++obj) {
-    if (obj != m_collection.begin())
+  for (auto obj = collection_.begin(); obj != collection_.end(); ++obj) {
+    if (obj != collection_.begin())
       stream << ",";
-    stream << "\"" << obj->first << "\":" << obj->second.toString();
+    stream << "\"" << obj->first << "\":" << obj->second.ToString();
   }
   stream << "}";
   return stream.str();
 }
 
-bool Object::isSeporator(const char Ch) {
-  return std::isspace(Ch) || Ch == ',' || Ch == ':' ||
-    Ch == '{' || Ch == '}' || Ch == '[' || Ch == ']';
-}
-
-bool Object::isBoolean(const std::string &Token) {
-  return (Token == "true") || (Token == "false");
-}
-
-bool Object::isInteger(const std::string &Token) {
-  for (std::size_t index = 0; index < Token.size(); ++index) {
-    if (index == 0 && Token[0] == '-')
-      continue;
-    if (!std::isdigit(Token[index]))
-      return false;
-  }
-  return !Token.empty();
-}
-
-bool Object::isFloat(const std::string& Token) {
-  bool was_dot = false;
-  for (std::size_t index = 0; index < Token.size(); ++index) {
-    const char Ch = Token[index];
-    if (index == 0 && Ch == '-')
-      continue;
-    if (!std::isdigit(Ch)) {
-      if (Ch != '.' || was_dot)
-        return false;
-      was_dot = true;
+void Object::ParseValue(const std::string& stream, std::size_t& parsed) {
+  const char ch = stream[parsed];
+  if (!IsSeporator(ch) || (!token_.empty() &&
+      token_[0] == '"' && token_[token_.length() - 1] != '"')) {
+    if (ch == '"' && !token_.empty() &&
+        token_[token_.length() - 1] == '\\') {
+      token_.erase(token_.end() - 1);
     }
-  }
-  return !Token.empty();
-}
-
-bool Object::isString(const std::string& Token) {
-  if (Token.empty())
-    return false;
-  return Token[0] == '"' && Token[Token.length() - 1] == '"';
-}
-
-void Object::parseValue(const std::string& Stream, std::size_t& Parsed) {
-  const char ch = Stream[Parsed];
-  if (!isSeporator(ch) || (!m_token.empty() &&
-    m_token[0] == '"' && m_token[m_token.length() - 1] != '"')) {
-    if (ch == '"' && !m_token.empty() &&
-        m_token[m_token.length() - 1] == '\\') {
-      m_token.erase(m_token.end() - 1);
-    }
-    m_token.append(1, ch);
-    ++Parsed;
+    token_.append(1, ch);
+    ++parsed;
     return;
   }
-  if (std::isspace(ch) && m_token.empty()) {
-    ++Parsed;
+  if (std::isspace(ch) && token_.empty()) {
+    ++parsed;
     return;
   }
-  if (isBoolean(m_token)) {
-    setBoolean(m_token == "true");
-    m_state = OnSuccess;
-  } else if (isInteger(m_token)) {
+  if (::koohar::IsBoolean(token_)) {
+    SetBoolean(token_ == "true");
+    state_ = OnSuccess;
+  } else if (IsInteger(token_)) {
     long value;
-    std::istringstream(m_token) >> value;
-    setInteger(value);
-    m_state = OnSuccess;
-  } else if (isFloat(m_token)) {
+    std::istringstream(token_) >> value;
+    SetInteger(value);
+    state_ = OnSuccess;
+  } else if (IsFloat(token_)) {
     double value;
-    std::istringstream(m_token) >> value;
-    setFloat(value);
-    m_state = OnSuccess;
-  } else if (isString(m_token)) {
-    m_token.erase(0, 1);
-    m_token.erase(m_token.end() - 1);
-    setString(m_token);
-    m_state = OnSuccess;
+    std::istringstream(token_) >> value;
+    SetFloat(value);
+    state_ = OnSuccess;
+  } else if (IsString(token_)) {
+    token_.erase(0, 1);
+    token_.erase(token_.end() - 1);
+    SetString(token_);
+    state_ = OnSuccess;
   } else if ('[' == ch) {
-    m_state = OnArrayObject;
-    m_token.clear();
-    ++Parsed;
+    state_ = OnArrayObject;
+    token_.clear();
+    ++parsed;
   } else if ('{' == ch) {
-    m_state = OnName;
-    m_token.clear();
-    ++Parsed;
-  } else
-    m_state = OnError;
-}
-
-void Object::parseArrayObject(const std::string& Stream, std::size_t& Parsed) {
-  Object obj;
-  std::string remaining(Stream);
-  remaining.erase(0, Parsed);
-  Parsed += obj.parse(remaining);
-  if (obj.errorParsing()) {
-    m_state = OnError;
-    return;
-  }
-  addToArray(obj);
-  m_state = OnComma;
-  m_token.clear();
-}
-
-void Object::parseComma(const std::string& Stream, std::size_t& Parsed) {
-  const char ch = Stream[Parsed];
-  ++Parsed;
-  if (std::isspace(ch))
-    return;
-  if (ch == ',') {
-    m_state = (m_type == Type::Array) ? OnArrayObject : OnName;
-  } else if ((ch == ']' && m_type == Type::Array) ||
-    (ch == '}' && m_type == Type::Collection)) {
-    m_state = OnSuccess;
+    state_ = OnName;
+    token_.clear();
+    ++parsed;
   } else {
-    m_state = OnError;
+    state_ = OnError;
   }
 }
 
-void Object::parseName(const std::string& Stream, std::size_t& Parsed) {
-  const char ch = Stream[Parsed];
-  ++Parsed;
-  if (m_token.empty()) {
-    if (std::isspace(ch))
+void Object::ParseArrayObject(const std::string& stream, std::size_t& parsed) {
+  Object object;
+  std::string remaining(stream);
+  remaining.erase(0, parsed);
+  parsed += object.Parse(remaining);
+  if (object.ErrorParsing()) {
+    state_ = OnError;
+    return;
+  }
+  AddToArray(object);
+  state_ = OnComma;
+  token_.clear();
+}
+
+void Object::ParseComma(const std::string& stream, std::size_t& parsed) {
+  const char ch = stream[parsed];
+  ++parsed;
+  if (std::isspace(ch)) {
+    return;
+  }
+  if (ch == ',') {
+    state_ = (type_ == Type::Array) ? OnArrayObject : OnName;
+  } else if ((ch == ']' && type_ == Type::Array) ||
+    (ch == '}' && type_ == Type::Collection)) {
+    state_ = OnSuccess;
+  } else {
+    state_ = OnError;
+  }
+}
+
+void Object::ParseName(const std::string& stream, std::size_t& parsed) {
+  const char ch = stream[parsed];
+  ++parsed;
+  if (token_.empty()) {
+    if (std::isspace(ch)) {
       return;
+    }
     if (ch != '"') {
-      m_state = OnError;
+      state_ = OnError;
       return;
     }
   } else if (ch == '"') {
-    m_token.erase(0, 1);
-    m_state = OnColon;
+    token_.erase(0, 1);
+    state_ = OnColon;
     return;
   }
-  m_token.append(1, ch);
+  token_.append(1, ch);
 }
 
-void Object::parseColon(const std::string& Stream, std::size_t& Parsed) {
-  const char ch = Stream[Parsed];
-  ++Parsed;
-  if (std::isspace(ch))
-    return;
-  m_state = (ch == ':') ? OnCollectionObject : OnError;
-}
-
-void Object::parseCollectionObject(const std::string& Stream,
-                                   std::size_t& Parsed) {
-  Object obj;
-  std::string remaining(Stream);
-  remaining.erase(0, Parsed);
-  Parsed += obj.parse(remaining);
-  if (obj.errorParsing()) {
-    m_state = OnError;
+void Object::ParseColon(const std::string& stream, std::size_t& parsed) {
+  const char ch = stream[parsed];
+  ++parsed;
+  if (std::isspace(ch)) {
     return;
   }
-  addToCollection(m_token, obj);
-  m_state = OnComma;
-  m_token.clear();
+  state_ = (ch == ':') ? OnCollectionObject : OnError;
 }
 
-std::string strigify(const Object& Obj) { return Obj.toString(); }
+void Object::ParseCollectionObject(const std::string& stream,
+                                   std::size_t& parsed) {
+  Object object;
+  std::string remaining(stream);
+  remaining.erase(0, parsed);
+  parsed += object.Parse(remaining);
+  if (object.ErrorParsing()) {
+    state_ = OnError;
+    return;
+  }
+  AddToCollection(token_, object);
+  state_ = OnComma;
+  token_.clear();
+}
 
-Object parse(const std::string& Stream) {
+std::string Stringify(const Object& object) { return object.ToString(); }
+
+Object Parse(const std::string& stream) {
   Object result;
-  result.parse(Stream);
+  result.Parse(stream);
   return result;
 }
 

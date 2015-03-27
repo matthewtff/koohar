@@ -10,28 +10,30 @@ namespace koohar {
 class Request;
 
 class ServerConfig {
-public:
-  void setStaticDir(const std::string& directory) { m_static_dir = directory; }
-  void setStaticUrl(const std::string& url) { m_static_urls.push_front(url); }
-  void setUseSSL(const bool use_ssl) { m_use_ssl = use_ssl; }
+ public:
+  bool IsStaticUrl(const Request& req) const;
+  void AddStaticUrl(const std::string& url) { static_urls_.push_front(url); }
 
-  bool isStaticUrl(const Request& req) const;
-  std::string getStaticDir() const { return m_static_dir; }
-  bool getUseSSL() const { return m_use_ssl; }
+  void Load(const std::string& file_name);
 
-  void load(const std::string& file_name);
-
+  // Get "error page" url.
   // Returns empty string if no page for specified code found.
-  std::string getErrorPage(const unsigned short code) const;
+  std::string GetErrorPage(const unsigned short code) const;
 
-private:
+  void set_static_dir(const std::string& directory) { static_dir_ = directory; }
+  std::string static_dir() const { return static_dir_; }
+
+  bool use_ssl() const { return use_ssl_; }
+  void set_use_ssl(const bool use_ssl) { use_ssl_ = use_ssl; }
+
+ private:
   typedef std::forward_list<std::string> StringList;
   typedef std::map<unsigned short, std::string> ErrorPagesMap;
 
-  std::string m_static_dir;
-  StringList m_static_urls;
-  ErrorPagesMap m_error_pages;
-  bool m_use_ssl;
+  std::string static_dir_;
+  StringList static_urls_;
+  ErrorPagesMap error_pages_;
+  bool use_ssl_;
 };  // class ServerConfig
 
 }  // namespace koohar

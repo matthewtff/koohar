@@ -1,83 +1,67 @@
 #ifndef koohar_file_hh
 #define koohar_file_hh
 
-#include <string>
-
 #ifdef _WIN32
-
 #include <winsock2.h>
-
 #else /* _WIN32 */
-
 #include <fcntl.h>
-
 #endif /* _WIN32 */
+
+#include <string>
 
 namespace koohar {
 
 class File {
-public:
-
+ public:
 #ifdef _WIN32
-
   enum class AccessType : DWORD {
-    ReadOnly = GENERIC_READ;
-    WriteOnly = GENERIC_WRITE;
-    ReadWrite = (GENERIC_READ | GENERIC_WRITE);
+    ReadOnly = GENERIC_READ,
+    WriteOnly = GENERIC_WRITE,
+    ReadWrite = (GENERIC_READ | GENERIC_WRITE),
   };
-
   typedef HANDLE Handle;
-
 #else /* _WIN32 */
-
   enum class AccessType : int {
     ReadOnly = O_RDONLY,
     WriteOnly = O_WRONLY,
     ReadWrite = O_RDWR
   };
-
   typedef int Handle;
-
 #endif /* _WIN32 */
 
   enum Error {
     IOError = -1,
   };
 
-public:
-  File ();
-  explicit File (File::Handle Hndl);
+  File();
+  explicit File(File::Handle handle);
   // This constructor just assigns filename, but file is NOT BEING OPENED.
-  explicit File (const std::string& FileName);
-  ~File ();
-  bool open (AccessType Mode);
-  void close ();
-  void remove ();
-  bool move (const std::string& NewFileName);
-  int read (void* Buffer, const size_t Length) const;
-  int write (const void* Buffer, const size_t Length);
-  std::string readToString() const;
-  size_t getSize () const { return m_size; }
-  time_t getTime () const { return m_time; }
-  Handle getHandle () const { return m_file; }
+  explicit File(const std::string& file_name);
+  ~File();
+  bool Open(AccessType Mode);
+  void Close();
+  void Remove();
+  bool Move(const std::string& new_file_name);
+  int Read(void* buffer, const size_t length) const;
+  int Write(const void* buffer, const size_t length);
+  std::string ReadToString() const;
+  size_t GetSize() const { return size_; }
+  time_t GetTime() const { return time_; }
+  Handle GetHandle() const { return file_; }
 
-public:
-  static int read (Handle Hndl, void* Buffer, const size_t Length);
-  static int write (Handle Hndl, const void* Buffer, const size_t Length);
+  static int Read(Handle handle, void* buffer, const size_t length);
+  static int Write(Handle handle, const void* buffer, const size_t length);
+  static bool IsDirectory(const char* path);
 
-  static bool isDirectory (const char* Path);
+ private:
+  void GetInfo();
+  void CreateTemp();
 
-private:
-  void getInfo ();
-  void createTemp ();
-
-private:
-  Handle m_file;
-  std::string m_fname;
-  size_t m_size;
-  time_t m_time;
-  bool m_opened;
-
+  Handle file_;
+  std::string fname_;
+  size_t size_;
+  time_t time_;
+  bool opened_;
 }; // class File
 
 } // namespace koohar

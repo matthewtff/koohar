@@ -18,6 +18,7 @@ class Date {
   bool ParseRFC1123(const std::string& date_string);
   bool ParseRFC1036(const std::string& date_string);
   bool ParseANSIC(const std::string& date_string);
+  bool ParseDate(const std::string& date_string, const char* date_format);
 
   std::tm date_;
 }; // class Date

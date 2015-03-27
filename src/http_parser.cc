@@ -7,55 +7,57 @@
 
 namespace koohar {
 
-HttpParser::Method operator++ (HttpParser::Method& Meth) {
+HttpParser::Method operator++(HttpParser::Method& method) {
   using Method = HttpParser::Method;
-  switch (Meth) {
-    case Method::Options: return Meth = Method::Get;
-    case Method::Get: return Meth = Method::Head;
-    case Method::Head: return Meth = Method::Post;
-    case Method::Post: return Meth = Method::Put;
-    case Method::Put: return Meth = Method::Delete;
-    case Method::Delete: return Meth = Method::Trace;
-    case Method::Trace: return Meth = Method::Connect;
-    case Method::Connect: return Meth = Method::Options;
-    default: NOTREACHED();
+  switch (method) {
+    case Method::Options: return method = Method::Get;
+    case Method::Get: return method = Method::Head;
+    case Method::Head: return method = Method::Post;
+    case Method::Post: return method = Method::Put;
+    case Method::Put: return method = Method::Delete;
+    case Method::Delete: return method = Method::Trace;
+    case Method::Trace: return method = Method::Connect;
+    case Method::Connect: return method = Method::Options;
+    default: NOTREACHED(); return method;
   }
 }
 
-bool HttpParser::update (const char* Data, const unsigned int Size) {
-  typedef void (HttpParser::*StateCallback) (const char ch);
+bool HttpParser::Update (const char* data, const unsigned int size) {
+  using StateCallback = void (HttpParser::*)(const char ch);
   static const StateCallback callbacks[] = {
-    &HttpParser::parseMethod,
-    &HttpParser::parseUri,
-    &HttpParser::parseHttpVersion,
-    &HttpParser::parseHeaderName,
-    &HttpParser::parseHeaderValue,
-    &HttpParser::parseBody
+    &HttpParser::ParseMethod,
+    &HttpParser::ParseUri,
+    &HttpParser::ParseHttpVersion,
+    &HttpParser::ParseHeaderName,
+    &HttpParser::ParseHeaderValue,
+    &HttpParser::ParseBody,
   };
 
   static_assert(
       array_size(callbacks) == static_cast<size_t>(State::OnComplete),
       "Number of callbacks should equal to '<number of states> - 2'");
 
-  static const std::size_t MaxTokenSize = 4096;
+  static const std::size_t kMaxTokenSize = 4096;
 
-  for (unsigned int counter = 0; counter < Size; ++counter) {
-    if (m_state == State::OnParseError)
+  for (unsigned int counter = 0; counter < size; ++counter) {
+    if (state_ == State::OnParseError) {
       return false;
-    if (m_token.length() > MaxTokenSize || !Data[counter]) {
-      m_state = State::OnParseError;
+    }
+    if (token_.length() > kMaxTokenSize || !data[counter]) {
+      state_ = State::OnParseError;
       return false; // Prevent buffer overflow.
     }
-    if (m_state == State::OnComplete)
+    if (state_ == State::OnComplete) {
       return true;
-    (this->*callbacks[static_cast<size_t>(m_state)]) (Data[counter]);
+    }
+    (this->*callbacks[static_cast<size_t>(state_)])(data[counter]);
   }
-  return m_state != State::OnParseError;
+  return state_ != State::OnParseError;
 }
 
 // private
 
-void HttpParser::parseMethod (const char ch) {
+void HttpParser::ParseMethod(const char ch) {
   static const std::map<std::string, Method> methods = {
     { "OPTIONS", Method::Options },
     { "GET", Method::Get },
@@ -64,122 +66,124 @@ void HttpParser::parseMethod (const char ch) {
     { "PUT", Method::Put },
     { "DELETE", Method::Delete },
     { "TRANCE", Method::Trace },
-    { "CONNECT", Method::Connect }
+    { "CONNECT", Method::Connect },
   };
 
   if (ch != ' ') {
-    m_token.append(1, ch);
+    token_.append(1, ch);
     return;
   }
 
   // Finished consuming method.
   const auto method = std::find_if(methods.begin(), methods.end(),
       [&](const std::pair<std::string, Method>& pair) {
-        return m_token == pair.first;
+        return token_ == pair.first;
       });
   const bool correct_method = method != methods.end();
-  if (correct_method)
-    m_method = (*method).second;
+  if (correct_method) {
+    method_ = method->second;
+  }
 
-  m_token.erase();
-  m_state = correct_method ? State::OnUri : State::OnParseError;
+  token_.erase();
+  state_ = correct_method ? State::OnUri : State::OnParseError;
 }
 
-void HttpParser::parseUri (const char ch) {
+void HttpParser::ParseUri(const char ch) {
   if (ch == ' ') {
-    m_uri = m_token;
-    m_state = State::OnHttpVersion;
-    m_token.erase();
-    if (!parse(m_uri)) // Bad uri.
-      m_state = State::OnParseError;
+    uri_ = token_;
+    state_ = State::OnHttpVersion;
+    token_.erase();
+    if (!Parse(uri_)) {  // Bad uri.
+      state_ = State::OnParseError;
+    }
   } else {
-    m_token.append(1, ch);
+    token_.append(1, ch);
   }
 }
 
-void HttpParser::parseHttpVersion (const char ch) {
+void HttpParser::ParseHttpVersion(const char ch) {
   if (ch == '\n') {
-    if (m_token.length() != string_length("HTTP/x.x")) {
-      m_state = State::OnParseError;
+    if (token_.length() != string_length("HTTP/x.x")) {
+      state_ = State::OnParseError;
       return;
     }
-    m_state = State::OnHeaderName;
+    state_ = State::OnHeaderName;
 
-    switch (m_token[5]) {
+    switch (token_[5]) {
       case '0':
-        m_version.m_major = 0;
+        version_.m_major = 0;
       break;
       case '1':
-        m_version.m_major = 1;
+        version_.m_major = 1;
       break;
       case '2':
-        m_version.m_major = 2;
+        version_.m_major = 2;
       break;
       default:
-        m_state = State::OnParseError;
+        state_ = State::OnParseError;
       break;
     }
 
-    switch (m_token[7]) {
+    switch (token_[7]) {
       case '0':
-        m_version.m_minor = 0;
+        version_.m_minor = 0;
       break;
       case '1':
-        m_version.m_minor = 1;
+        version_.m_minor = 1;
       break;
       case '9':
-        m_version.m_minor = 9;
+        version_.m_minor = 9;
       break;
       default:
-        m_state = State::OnParseError;
+        state_ = State::OnParseError;
       break;
     }
-    m_token.erase();
+    token_.erase();
   } else if (ch != '\r') {
-    m_token.append(1, ch);
+    token_.append(1, ch);
   }
 }
 
-void HttpParser::parseHeaderName (const char ch) {
+void HttpParser::ParseHeaderName(const char ch) {
   if (ch == '\n') {
-    m_state = m_content_length ? State::OnBody : State::OnComplete;
-    m_token.erase();
+    state_ = content_length_ ? State::OnBody : State::OnComplete;
+    token_.erase();
   } else if (ch == ' ') {
-    m_current_header = m_token;
-    m_state = State::OnHeaderValue;
-    m_token.erase();
+    current_header_ = token_;
+    state_ = State::OnHeaderValue;
+    token_.erase();
   } else if (ch != ':') {
-    m_token.append(1, tolower(ch));
+    token_.append(1, tolower(ch));
   }
 }
 
-void HttpParser::parseHeaderValue (const char ch) {
+void HttpParser::ParseHeaderValue(const char ch) {
   if (ch == '\n') {
-    m_headers[m_current_header] = m_token;
-    if (m_current_header == "content-length") {
-      m_content_length = std::atol(m_token.c_str());
-    } else if (m_current_header == "cookie") {
-      parseCookies(m_token);
+    headers_[current_header_] = token_;
+    if (current_header_ == "content-length") {
+      content_length_ = std::atol(token_.c_str());
+    } else if (current_header_ == "cookie") {
+      ParseCookies(token_);
     }
-    m_state = State::OnHeaderName;
-    m_token.erase();
+    state_ = State::OnHeaderName;
+    token_.erase();
   } else if (ch != '\r') {
-    m_token.append(1, ch);
+    token_.append(1, ch);
   }
 }
 
-void HttpParser::parseBody (const char ch) {
-  m_body.append(1, ch);
-  m_token.append(1, ch);
-  if (m_token.length() == m_content_length) {
-    m_state = State::OnComplete;
-    if (m_method == Method::Post) {
-      parseQuery(m_body);
+void HttpParser::ParseBody(const char ch) {
+  body_.append(1, ch);
+  token_.append(1, ch);
+  if (token_.length() == content_length_) {
+    state_ = State::OnComplete;
+    if (method_ == Method::Post) {
+      ParseQuery(body_);
     }
   }
 }
 
-void HttpParser::parseCookies (const std::string& CookieStr) {
+void HttpParser::ParseCookies(const std::string& CookieStr) {
   static const std::regex cookie_regex {"([^=]+)=?([^;]*)(;)?[:space]?"};
   static const std::regex_constants::match_flag_type flags =
     std::regex_constants::match_default;
@@ -190,7 +194,7 @@ void HttpParser::parseCookies (const std::string& CookieStr) {
   while (std::regex_search(start, end, what, cookie_regex, flags)) {
     const std::string cookie_name (what[1].first, what[1].second);
     const std::string cookie_value (what[2].first, what[2].second);
-    m_cookies[cookie_name] = cookie_value;
+    cookies_[cookie_name] = cookie_value;
     start = what[0].second;
   }
 }

@@ -4,7 +4,16 @@
 #include <cerrno>
 
 #include "base/filemapping.hh"
+#include "base/json.hh"
 #include "base/utils.hh"
+
+namespace {
+const char kContentTypeHeader[] = "Content-Type";
+const char kLocationHeader[] = "Location";
+const char kSetCookieHeader[] = "Set-Cookie";
+
+const char kJSONMimeType[] = "application/json";
+}  // anonymous namespace
 
 namespace koohar {
 
@@ -70,119 +79,123 @@ Response::StateMap Response::States = {
   {510, "510 Not Extended"},
 };
 
-Response::Response (HttpConnection::Pointer Connection) :
-  m_headers_allowed(true), m_connection(Connection)
-{}
-
-void Response::writeHead(const unsigned short State) {
-  if (!m_headers_allowed)
-    return;
-  std::string head {"HTTP/1.1 "};
-  head += States[State] + "\r\n";
-  transfer(head.c_str(), head.length());
+Response::Response(HttpConnection::Pointer Connection)
+    : headers_allowed_(true), connection_(Connection) {
 }
 
-void Response::header(const std::string& HeaderName,
-                      const std::string& HeaderValue,
-                      const bool Replace) {
-  if (!m_headers_allowed || HeaderName.empty() || HeaderValue.empty())
+void Response::WriteHead(const unsigned short state) {
+  if (!headers_allowed_) {
     return;
-  std::string& hdr = m_headers[HeaderName];
-  hdr = (hdr.empty() || Replace)
-    ? HeaderValue
-    : (hdr.append("; ").append(HeaderValue));
+  }
+  std::string head{"HTTP/1.1 "};
+  head += States[state] + "\r\n";
+  Transfer(head.c_str(), head.length());
+}
+
+void Response::Header(const std::string& header_name,
+                      const std::string& header_value,
+                      const bool replace) {
+  if (!headers_allowed_ || header_name.empty() || header_value.empty()) {
+    return;
+  }
+  std::string& hdr = headers_[header_name];
+  hdr = (hdr.empty() || replace) ?
+      header_value : (hdr.append("; ").append(header_value));
 }
 
 /**
  * Actually you should be very carefull to this method cause it
  * does not seem to replace existing cookie value.
  */
-bool Response::cookie(const std::string& CookieName,
-                      const std::string& CookieValue) {
-  const std::string cookie_str = CookieName + "=" + CookieValue + "; Path=/;";
-  if (CookieName.empty() || CookieValue.empty())
+bool Response::Cookie(const std::string& cookie_name,
+                      const std::string& cookie_value) {
+  const std::string cookie_str = cookie_name + "=" + cookie_value + "; Path=/;";
+  if (cookie_name.empty() || cookie_value.empty()) {
     return false;
-  // Dont replace all cookies, just add
-  header("Set-Cookie", cookie_str, false);
+  }
+  // Dont replace all cookies, just add one.
+  Header(kSetCookieHeader, cookie_str, false);
   return true;
 }
 
-void Response::body(const std::string& String) {
-  body(String.c_str(), String.length());
+void Response::Body(const std::string& data) {
+  Body(data.c_str(), data.length());
 }
 
-void Response::body(const void* Buffer, const off_t BufferSize) {
-  sendHeaders();
-  transfer(Buffer, BufferSize);
+void Response::Body(const void* buffer, const off_t buffer_size) {
+  SendHeaders();
+  Transfer(buffer, buffer_size);
 }
 
-bool Response::sendFile(const File::Handle Handle,
-                        const off_t Size,
-                        const off_t Offset) {
-  sendHeaders();
+bool Response::SendFile(const File::Handle file_handle,
+                        const off_t size,
+                        const off_t offset) {
+  SendHeaders();
 
-  FileMapping mapping {Handle};
-  const char* mapped_file = mapping.map(Size, Offset);
+  FileMapping mapping{file_handle};
+  const char* mapped_file = mapping.Map(size, offset);
 
-  if (!mapped_file)
+  if (!mapped_file) {
     return false;
+  }
 
-  transfer(static_cast<const void*>(mapped_file), Size);
+  Transfer(static_cast<const void*>(mapped_file), size);
   return true;
 }
 
-void Response::end(const std::string& String) {
-  return end(String.c_str(), String.length());
+void Response::End(const std::string& data) {
+  return End(data.c_str(), data.length());
 }
 
-void Response::end(const void* Buffer, const off_t BufferSize) {
-  sendHeaders();
-  body(Buffer, BufferSize);
-  m_connection->close();
+void Response::End(const void* buffer, const off_t buffer_size) {
+  SendHeaders();
+  Body(buffer, buffer_size);
+  connection_->Close();
 }
 
-void Response::end() {
-  sendHeaders();
-  m_connection->close();
+void Response::End() {
+  SendHeaders();
+  connection_->Close();
 }
 
-void Response::redirect(const std::string& Url) {
-  writeHead(302);
-  header("Location", Url);
+void Response::Redirect(const std::string& url) {
+  WriteHead(302);
+  Header(kLocationHeader, url);
 }
 
-void Response::sendJSON(const JSON::Object& Obj) {
-  writeHead(200);
-  header("Content-Type", "application/json");
-  end(Obj.toString());
+void Response::SendJSON(const JSON::Object& object) {
+  WriteHead(200);
+  Header(kContentTypeHeader, kJSONMimeType);
+  End(object.ToString());
 }
 
-void Response::badRequest() {
-  writeHead(400);
-  end();
+void Response::BadRequest() {
+  WriteHead(400);
+  End();
 }
 
 // private
 
-void Response::transfer(const void* Buffer, const off_t BufferSize) {
-  m_connection->write(static_cast<const char*>(Buffer), BufferSize);
+void Response::Transfer(const void* buffer, const off_t buffer_size) {
+  connection_->Write(static_cast<const char*>(buffer), buffer_size);
 }
 
-void Response::sendHeaders() {
-  static const char HeaderDelimiter[] {": "};
-  static const char LineDelimiter[] {"\r\n"};
+void Response::SendHeaders() {
+  static const char HeaderDelimiter[]{": "};
+  static const char LineDelimiter[]{"\r\n"};
 
-  if (!m_headers_allowed)
+  if (!headers_allowed_) {
     return;
-  for (const auto& header : m_headers) {
-    transfer(header.first.c_str(), header.first.length());
-    transferString(HeaderDelimiter);
-    transfer(header.second.c_str(), header.second.length());
-    transferString(LineDelimiter);
   }
-  transferString(LineDelimiter);
-  m_headers.clear();
-  m_headers_allowed = false;
+  for (const auto& header : headers_) {
+    Transfer(header.first.c_str(), header.first.length());
+    TransferString(HeaderDelimiter);
+    Transfer(header.second.c_str(), header.second.length());
+    TransferString(LineDelimiter);
+  }
+  TransferString(LineDelimiter);
+  headers_.clear();
+  headers_allowed_ = false;
 }
 
-} // namespace koohar
+}  // namespace koohar

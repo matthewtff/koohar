@@ -27,7 +27,7 @@ class HttpParser : public UriParser {
     Put,
     Delete,
     Trace,
-    Connect
+    Connect,
   };
 
   HttpParser() = default;
@@ -42,32 +42,32 @@ class HttpParser : public UriParser {
    * @param Size Size of data pointed ealrier.
    * @return false on parse error, true otherwise.
    */
-  bool update (const char* Data, const unsigned int Size);
-  bool isBad () const { return m_state == State::OnParseError; }
-  bool IsComplete () const { return m_state == State::OnComplete; }
-  Method method () const { return m_method; }
-  std::string uri () const { return m_uri; }
-  Version version () const { return m_version; }
+  bool Update(const char* data, const unsigned int size);
+  bool IsBad() const { return state_ == State::OnParseError; }
+  bool IsComplete() const { return state_ == State::OnComplete; }
 
-  std::string header (const std::string& HeaderName) {
-    return m_headers[HeaderName];
+  std::string Header(const std::string& header_name) {
+    return headers_[header_name];
   }
 
-  std::string cookie (const std::string& CookieName) {
-    return m_cookies[CookieName];
+  std::string Cookie(const std::string& cookie_name) {
+    return cookies_[cookie_name];
   }
 
-  std::string rawBody () const { return m_body; }
+  Method method() const { return method_; }
+  std::string uri() const { return uri_; }
+  Version version() const { return version_; }
+  std::string body() const { return body_; }
 
-protected:
-  Method m_method;
-  std::string m_uri;
-  Version m_version;
-  StringMap m_headers;
-  std::string m_body;
-  StringMap m_cookies;
+ protected:
+  Method method_;
+  std::string uri_;
+  Version version_;
+  StringMap headers_;
+  std::string body_;
+  StringMap cookies_;
 
-private:
+ private:
   enum class State {
     OnMethod,
     OnUri,
@@ -76,24 +76,23 @@ private:
     OnHeaderValue,
     OnBody,
     OnComplete,
-    OnParseError
+    OnParseError,
   };
 
-  void parseMethod (const char ch);
-  void parseUri (const char ch);
-  void parseHttpVersion (const char ch);
-  void parseHeaderName (const char ch);
-  void parseHeaderValue (const char ch);
-  void parseBody (const char ch);
+  void ParseMethod (const char ch);
+  void ParseUri (const char ch);
+  void ParseHttpVersion (const char ch);
+  void ParseHeaderName (const char ch);
+  void ParseHeaderValue (const char ch);
+  void ParseBody (const char ch);
 
-  void parseCookies (const std::string& CookieStr);
+  void ParseCookies (const std::string& CookieStr);
 
-private:
-  State m_state = State::OnMethod;
-  std::string m_token;
-  std::string m_current_header;
+  State state_ = State::OnMethod;
+  std::string token_;
+  std::string current_header_;
 
-  std::uint64_t m_content_length = 0;
+  std::uint64_t content_length_ = 0;
 }; // class HttpParser
 
 } // namespace koohar

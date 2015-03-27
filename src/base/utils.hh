@@ -6,9 +6,7 @@
 #include <string>
 
 #ifndef NDEBUG
-
 #include <iostream>
-
 #endif // NDEBUG
 
 namespace koohar {
@@ -18,14 +16,13 @@ typedef std::map<std::string, std::string> StringMap;
 template <typename T, size_t N>
 char (&ArraySizeHelper(const T (&array)[N]))[N];
 
-template <typename Array>
-constexpr size_t array_size(const Array& array) {
-  return sizeof(ArraySizeHelper(array));
-}
+#define array_size(array) (sizeof(koohar::ArraySizeHelper(array)))
+
 
 // Length of string without terminating null character.
 template <size_t N>
-constexpr size_t string_length(const char (&)[N]) {
+size_t string_length(const char (&)[N]) {
+  static_assert(N > 0, "String is not null terminated!");
   return N - 1;
 }
 
@@ -36,7 +33,6 @@ constexpr size_t string_length(const char (&)[N]) {
 #else // NDEBUG
 
 class DummyOstream : public std::ostream {};
-
 #define LOG dummy;
 
 #endif // NDEBUG

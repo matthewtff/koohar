@@ -1,6 +1,9 @@
 #include "base/date.hh"
 
+#include <algorithm>
+#include <ctime>
 #include <exception>
+#include <forward_list>
 #include <iomanip>
 #include <sstream>
 
@@ -10,10 +13,7 @@ namespace koohar {
 
 Date::Date() {
   const std::time_t local_time = std::time(nullptr);
-  const std::tm* local_tm = std::gmtime(&local_time);
-  if (local_tm) {
-    date_ = *local_tm;
-  }
+  gmtime_r(&local_time, &date_);
 }
 
 Date::Date(const std::string& date_string) {
@@ -21,9 +21,11 @@ Date::Date(const std::string& date_string) {
 }
 
 std::string Date::ToString() const {
-  std::ostringstream ss;
-  ss << std::put_time(&date_, "%a, %d %b %Y %T GMT");
-  return ss.str();
+  static const size_t kBufferSize = 512u;
+  char buffer[kBufferSize];
+  const size_t size =
+      std::strftime(buffer, kBufferSize, "%a, %d %b %Y %T GMT", &date_);
+  return std::string(buffer, size);
 }
 
 bool Date::Parse(const std::string& date_string) {
@@ -35,23 +37,19 @@ bool Date::Parse(const std::string& date_string) {
 // private:
 
 bool Date::ParseRFC1123(const std::string& date_string) {
-  std::istringstream ss(date_string);
-  ss >> std::get_time(&date_, "%a, %d %b %Y %T GMT");
-  return !ss.fail();
+  return ParseDate(date_string, "%a, %d %b %Y %T GMT");
 }
 
 bool Date::ParseRFC1036(const std::string& date_string) {
-  static const char* kDaysOfWeek[] = {
+  static std::forward_list<std::string> kDaysOfWeek = {
     "Monday,",
     "Tuesday,",
     "Wednesday,",
     "Thursday,",
     "Friday,",
     "Saturday,",
-    "Sunday,"
+    "Sunday,",
   };
-  static const char** begin_of_week = kDaysOfWeek;
-  static const char** end_of_week = kDaysOfWeek + array_size(kDaysOfWeek);
   if (date_string.find(' ') == std::string::npos) {
     return false;
   }
@@ -59,18 +57,27 @@ bool Date::ParseRFC1036(const std::string& date_string) {
   std::istringstream ss(date_string);
   ss >> day_of_week;
 
-  if (end_of_week == std::find(begin_of_week, end_of_week, day_of_week)) {
+  if (kDaysOfWeek.end() == std::find(kDaysOfWeek.begin(),
+                                     kDaysOfWeek.end(),
+                                     day_of_week)) {
     return false;
   }
 
-  ss >> std::get_time(&date_, "%d-%b-%y %T GMT");
-  return !ss.fail();
+  return ParseDate(ss.str(), "%d-%b-%y %T GMT");
 }
 
 bool Date::ParseANSIC(const std::string& date_string) {
-  std::istringstream ss(date_string);
-  ss >> std::get_time(&date_, "%a %b %d %T %Y");
-  return !ss.fail();
+  return ParseDate(date_string, "%a %b %d %T %Y");
 }
 
-} // namespace koohar
+bool Date::ParseDate(const std::string& date_string, const char* date_format) {
+#ifdef _WIN32
+  std::istringstream ss(date_string);
+  ss >> std::get_time(&date_, date_format);
+  return !ss.fail();
+#else  // _WIN32
+  return strptime(date_string.c_str(), date_format, &date_);
+#endif  // _WIN32
+}
+
+}  // namespace koohar

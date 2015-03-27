@@ -6,22 +6,19 @@
 namespace koohar {
 
 class FileMapping {
-public:
-  explicit FileMapping (const File::Handle FH);
-  ~FileMapping ();
-  char* map (const size_t Size, const size_t offset);
-  void unMap ();
+ public:
+  explicit FileMapping(const File::Handle handle);
+  ~FileMapping();
+  char* Map(const size_t Size, const size_t offset);
+  void UnMap();
 
-private:
-  const File::Handle m_file;
-  size_t m_size;
-  char* m_address;
-  bool m_mapped;
-
+ private:
+  const File::Handle file_;
+  size_t size_;
+  char* address_;
+  bool mapped_;
 #ifdef _WIN32
-
-  HANDLE m_file_map;
-
+  File::Handle file_map_;
 #endif // _WIN32
 }; // class FileMapping
 

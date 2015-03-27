@@ -15,51 +15,47 @@ namespace koohar {
 
 class Response;
 
-class HttpConnection : public std::enable_shared_from_this<HttpConnection>
-{
-public:
-  static const unsigned int MaxRequestSize = 65536; // 64KB
+class HttpConnection : public std::enable_shared_from_this<HttpConnection> {
+ public:
+  static const unsigned int kMaxRequestSize = 65536;  // 64KB
 
   typedef std::shared_ptr<HttpConnection> Pointer;
-
   typedef std::function<void(koohar::Request&&, koohar::Response&&)> UserFunc;
-
   typedef std::list<std::vector<char>> DataBuffers;
 
-public:
-  static Pointer create(boost::asio::io_service& IoService,
-                        UserFunc UserCallFunction,
-                        const ServerConfig& Config);
+  static Pointer Create(boost::asio::io_service& io_service,
+                        UserFunc user_call_function,
+                        const ServerConfig& config);
 
   ~HttpConnection();
 
-  boost::asio::ip::tcp::socket& socket() { return m_socket; }
-  void start();
-  void write(const char* Data, const std::size_t Size);
-  void close() { m_close_socket = true; }
-  void setUserFunction(UserFunc UserCallFunction);
+  boost::asio::ip::tcp::socket& Socket() { return socket_; }
+  void Start();
+  void Write(const char* data, const std::size_t size);
+  void Close();
+  void set_user_function(UserFunc user_call_function) {
+    user_call_function_ = user_call_function;
+  }
 
-public:
+  bool closed() const { return close_socket_; }
 
-private:
-  HttpConnection(boost::asio::io_service& IoService,
-                 UserFunc UserCallFunction,
-                 const ServerConfig& Config);
-  void handleRead(const boost::system::error_code& Error,
-                  const std::size_t BytesTransferred);
-  void handleWrite(const boost::system::error_code& Error,
-                   const std::size_t BytesTransferred);
-private:
-  ServerConfig m_config;
-  boost::asio::ip::tcp::socket m_socket;
-  std::string m_answer;
-  char m_request_buffer[MaxRequestSize];
+ private:
+  HttpConnection(boost::asio::io_service& io_service,
+                 UserFunc user_call_function,
+                 const ServerConfig& config);
+  void HandleRead(const boost::system::error_code& error,
+                  const std::size_t bytes_transferred);
+  void HandleWrite(const boost::system::error_code& error,
+                   const std::size_t bytes_transferred);
 
-  Request m_request;
-  UserFunc m_user_call_function;
-  DataBuffers m_buffers;
-  int m_writing_operations;
-  bool m_close_socket;
+  ServerConfig config_;
+  boost::asio::ip::tcp::socket socket_;
+  char request_buffer_[kMaxRequestSize];
+  Request request_;
+  UserFunc user_call_function_;
+  DataBuffers buffers_;
+  int writing_operations_;
+  bool close_socket_;
 
   std::string url_;
 }; // class HttpConnection

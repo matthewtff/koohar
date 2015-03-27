@@ -5,72 +5,77 @@
 
 namespace {
 
-char fromHex (const char ch) {
-  return isdigit(ch) ? ch - '0' : tolower(ch) - 'a' + 10;
+char FromHex(const char ch) {
+  return std::isdigit(ch) ? ch - '0' : std::tolower(ch) - 'a' + 10;
 }
 
-std::string decode (const std::string& Uri) {
-  std::string ret_str;
+std::string Decode(const std::string& Uri) {
+  std::string result;
   for (unsigned int counter = 0; counter < Uri.length(); ++counter) {
     if (Uri[counter] == '%') {
-      if (Uri.length() - counter < 2)
-        return ret_str;
-      ret_str.append(1,
-        fromHex(Uri[counter + 1]) << 4 | fromHex(Uri[counter + 2]));
+      if (Uri.length() - counter < 2) {
+        return result;
+      }
+      result.append(1,
+                    FromHex(Uri[counter + 1]) << 4 | FromHex(Uri[counter + 2]));
       counter += 2;
     } else {
-      ret_str += Uri[counter] == '+' ? ' ' : Uri[counter];
+      result += Uri[counter] == '+' ? ' ' : Uri[counter];
     }
   }
-  return ret_str;
+  return result;
 }
 
 }  // anonymous namespace
 
 namespace koohar {
 
-bool UriParser::parse (const std::string& uri) {
+bool UriParser::Parse(const std::string& uri) {
   static const std::regex uri_regex
       ("^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?");
 
-  const std::string decoded_uri = decode (uri);
+  const std::string decoded_uri = Decode(uri);
   const std::regex_constants::match_flag_type flags =
       std::regex_constants::match_default;
 
   const std::string::const_iterator start = decoded_uri.begin();
   const std::string::const_iterator end = decoded_uri.end();
   std::match_results<std::string::const_iterator> what;
-  if (!std::regex_search(start, end, what, uri_regex, flags))
+  if (!std::regex_search(start, end, what, uri_regex, flags)) {
     return false;
+  }
 
-  m_scheme = std::string(what[2].first, what[2].second);
-  m_authority = std::string(what[4].first, what[4].second);
-  m_path = std::string(what[5].first, what[5].second);
-  m_query = std::string(what[7].first, what[7].second);
-  m_fragment = std::string(what[9].first, what[9].second);
+  scheme_ = std::string(what[2].first, what[2].second);
+  authority_ = std::string(what[4].first, what[4].second);
+  path_ = std::string(what[5].first, what[5].second);
+  query_ = std::string(what[7].first, what[7].second);
+  fragment_ = std::string(what[9].first, what[9].second);
 
-  parseQuery(m_query);
-
+  ParseQuery(query_);
   return true;
 }
 
-std::string UriParser::body (const std::string& QueryName) {
-  return m_queries[QueryName];
+std::string UriParser::Body(const std::string& query_name) const {
+  StringMap::const_iterator data_iterator = queries_.find(query_name);
+  if (data_iterator == queries_.cend()) {
+    return std::string();
+  }
+  return data_iterator->second;
 }
 
 // protected
 
-void UriParser::parseQuery (const std::string& QueryString) {
+void UriParser::ParseQuery(const std::string& query_string) {
   static const std::regex query_regex ("([^&=]+)=?([^&]*)(&)?");
   const std::regex_constants::match_flag_type flags =
       std::regex_constants::match_default;
-  std::string::const_iterator start = QueryString.begin();
-  const std::string::const_iterator end = QueryString.end();
+  std::string::const_iterator start = query_string.begin();
+  const std::string::const_iterator end = query_string.end();
   std::match_results<std::string::const_iterator> what;
   while (std::regex_search(start, end, what, query_regex, flags)) {
     std::string query_name (what[1].first, what[1].second);
     std::string query_value (what[2].first, what[2].second);
-    m_queries[query_name] = query_value;
+    queries_[query_name] = query_value;
     start = what[0].second;
   }
 }

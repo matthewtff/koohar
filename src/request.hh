@@ -9,15 +9,15 @@ namespace koohar {
 
 class Request : public HttpParser {
  public:
-  static int errorCode () { return 400; }
+  static int error_code() { return 400; }
 
   Request() = default;
   Request(Request&&) = default;
 
   Request& operator=(Request&&) = default;
 
-  bool contains (const std::string& Url) const;
-  bool corresponds (const std::string& StaticUrl) const;
+  bool Contains(const std::string& url) const;
+  bool Corresponds(const std::string& static_url) const;
 }; // class Request
 
 } // namespace koohar
