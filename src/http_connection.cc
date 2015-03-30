@@ -10,6 +10,10 @@
 
 using boost::asio::ip::tcp;
 
+namespace {
+const char kFaviconUrl[] = "/favicon.ico";
+}  // anoymous namespace
+
 namespace koohar {
 
 HttpConnection::Pointer HttpConnection::Create (
@@ -91,7 +95,7 @@ void HttpConnection::HandleRead(const boost::system::error_code& error,
 
   url_ = request_.uri();
 
-  if (config_.IsStaticUrl(request_)) {
+  if (config_.IsStaticUrl(request_) || request_.path() == kFaviconUrl) {
     StaticTransfer static_transfer{std::move(request_),
                                    std::move(res),
                                    config_};
