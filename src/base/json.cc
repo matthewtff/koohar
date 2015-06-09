@@ -68,6 +68,12 @@ bool IsString(const std::string& token) {
 
 namespace JSON {
 
+void Object::SetType(const Type type) {
+  if (Empty()) {
+    type_ = type;
+  }
+}
+
 bool Object::SetBoolean(const bool boolean) {
   SetTypeIfUndefined(Type::Boolean);
   if (!HasType(Type::Boolean)) {

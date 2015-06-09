@@ -62,6 +62,7 @@ class Object {
 
   Type type() const { return type_; }
   bool HasType(const Type SomeType) const { return SomeType == type_; }
+  void SetType(const Type SomeType);
 
   bool& GetBoolean() { return boolean_; }
   bool GetBoolean() const { return boolean_; }
