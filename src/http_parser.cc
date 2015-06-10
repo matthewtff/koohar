@@ -4,6 +4,7 @@
 #include <cstdlib>
 
 #include "base/utils.hh"
+#include "regex.hh"
 
 namespace koohar {
 
@@ -184,14 +185,14 @@ void HttpParser::ParseBody(const char ch) {
 }
 
 void HttpParser::ParseCookies(const std::string& CookieStr) {
-  static const std::regex cookie_regex {"([^=]+)=?([^;]*)(;)?[:space]?"};
-  static const std::regex_constants::match_flag_type flags =
-    std::regex_constants::match_default;
+  static const re::regex cookie_regex {"([^=]+)=?([^;]*)(;)?[:space]?"};
+  static const re::regex_constants::match_flag_type flags =
+      re::regex_constants::match_default;
 
   std::string::const_iterator start = CookieStr.begin();
   const std::string::const_iterator end = CookieStr.end();
-  std::match_results<std::string::const_iterator> what;
-  while (std::regex_search(start, end, what, cookie_regex, flags)) {
+  re::match_results<std::string::const_iterator> what;
+  while (re::regex_search(start, end, what, cookie_regex, flags)) {
     const std::string cookie_name (what[1].first, what[1].second);
     const std::string cookie_value (what[2].first, what[2].second);
     cookies_[cookie_name] = cookie_value;

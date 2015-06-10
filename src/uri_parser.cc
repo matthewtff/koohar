@@ -1,7 +1,8 @@
 #include "uri_parser.hh"
 
 #include <cctype>
-#include <regex>
+
+#include <regex.hh>
 
 namespace {
 
@@ -31,17 +32,17 @@ std::string Decode(const std::string& Uri) {
 namespace koohar {
 
 bool UriParser::Parse(const std::string& uri) {
-  static const std::regex uri_regex
+  static const re::regex uri_regex
       ("^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?");
 
   const std::string decoded_uri = Decode(uri);
-  const std::regex_constants::match_flag_type flags =
-      std::regex_constants::match_default;
+  const re::regex_constants::match_flag_type flags =
+      re::regex_constants::match_default;
 
   const std::string::const_iterator start = decoded_uri.begin();
   const std::string::const_iterator end = decoded_uri.end();
-  std::match_results<std::string::const_iterator> what;
-  if (!std::regex_search(start, end, what, uri_regex, flags)) {
+  re::match_results<std::string::const_iterator> what;
+  if (!re::regex_search(start, end, what, uri_regex, flags)) {
     return false;
   }
 
@@ -66,13 +67,13 @@ std::string UriParser::Body(const std::string& query_name) const {
 // protected
 
 void UriParser::ParseQuery(const std::string& query_string) {
-  static const std::regex query_regex ("([^&=]+)=?([^&]*)(&)?");
-  const std::regex_constants::match_flag_type flags =
-      std::regex_constants::match_default;
+  static const re::regex query_regex ("([^&=]+)=?([^&]*)(&)?");
+  const re::regex_constants::match_flag_type flags =
+      re::regex_constants::match_default;
   std::string::const_iterator start = query_string.begin();
   const std::string::const_iterator end = query_string.end();
-  std::match_results<std::string::const_iterator> what;
-  while (std::regex_search(start, end, what, query_regex, flags)) {
+  re::match_results<std::string::const_iterator> what;
+  while (re::regex_search(start, end, what, query_regex, flags)) {
     std::string query_name (what[1].first, what[1].second);
     std::string query_value (what[2].first, what[2].second);
     queries_[query_name] = query_value;

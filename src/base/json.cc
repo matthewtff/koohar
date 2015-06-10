@@ -201,7 +201,7 @@ std::string Object::ToString() const {
     case Type::String: return StringToString();
     case Type::Array: return ArrayToString();
     case Type::Collection: return CollectionToString();
-    default: NOTREACHED();
+    default: NOTREACHED(); return std::string();
   }
 }
 

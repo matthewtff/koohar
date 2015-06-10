@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <string>
-#include <regex>
 
 #include "uri_parser.hh"
 
