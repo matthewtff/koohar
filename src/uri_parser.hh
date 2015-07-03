@@ -11,10 +11,13 @@ namespace koohar {
 class UriParser {
  public:
   UriParser() {}
+  UriParser(const UriParser&) = default;
   UriParser(UriParser&&) = default;
   virtual ~UriParser() = default;
 
   UriParser& operator=(UriParser&&) = default;
+
+  bool valid() const { return valid_; }
 
   bool Parse(const std::string& uri);
   std::string Body(const std::string& query_name) const;
@@ -30,6 +33,7 @@ class UriParser {
 
   StringMap queries_;
 
+  bool valid_ = false;
   std::string scheme_;
   std::string authority_;
   std::string path_;

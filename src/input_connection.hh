@@ -1,5 +1,5 @@
-#ifndef koohar_http_connection_hh
-#define koohar_http_connection_hh
+#ifndef koohar_input_connection_hh
+#define koohar_input_connection_hh
 
 #include <list>
 #include <memory>
@@ -15,34 +15,30 @@ namespace koohar {
 
 class Response;
 
-class HttpConnection : public std::enable_shared_from_this<HttpConnection> {
+class InputConnection : public std::enable_shared_from_this<InputConnection> {
  public:
   static const unsigned int kMaxRequestSize = 65536;  // 64KB
 
-  typedef std::shared_ptr<HttpConnection> Pointer;
-  typedef std::function<void(koohar::Request&&, koohar::Response&&)> UserFunc;
+  typedef std::shared_ptr<InputConnection> Pointer;
+  typedef std::function<void(Request&&, Response&&)> UserFunc;
   typedef std::list<std::vector<char>> DataBuffers;
 
   static Pointer Create(boost::asio::io_service& io_service,
                         UserFunc user_call_function,
                         const ServerConfig& config);
 
-  ~HttpConnection();
-
   boost::asio::ip::tcp::socket& Socket() { return socket_; }
   void Start();
   void Write(const char* data, const std::size_t size);
   void Close();
-  void set_user_function(UserFunc user_call_function) {
-    user_call_function_ = user_call_function;
-  }
 
   bool closed() const { return close_socket_; }
 
  private:
-  HttpConnection(boost::asio::io_service& io_service,
+  InputConnection(boost::asio::io_service& io_service,
                  UserFunc user_call_function,
                  const ServerConfig& config);
+  void Write();
   void HandleRead(const boost::system::error_code& error,
                   const std::size_t bytes_transferred);
   void HandleWrite(const boost::system::error_code& error,
@@ -54,12 +50,12 @@ class HttpConnection : public std::enable_shared_from_this<HttpConnection> {
   Request request_;
   UserFunc user_call_function_;
   DataBuffers buffers_;
-  int writing_operations_;
+  bool currently_writing_;
   bool close_socket_;
 
   std::string url_;
-}; // class HttpConnection
+}; // class InputConnection
 
 } // namespace koohar
 
-#endif // koohar_http_connection_hh
+#endif // koohar_input_connection_hh

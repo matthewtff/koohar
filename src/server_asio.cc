@@ -5,6 +5,8 @@
 
 #include "base/utils.hh"
 
+#include "output_connection.hh"
+
 using boost::asio::ip::tcp;
 
 namespace koohar {
@@ -19,10 +21,11 @@ std::size_t GenerateTimerId() {
 
 ServerAsio::ServerAsio(const unsigned short port)
     : port_(port),
-      acceptor_(io_service_, tcp::endpoint(tcp::v4(), port)) {
+      acceptor_(io_service_, tcp::endpoint(tcp::v4(), port)),
+      resolver_(io_service_) {
 }
 
-void ServerAsio::Listen(HttpConnection::UserFunc user_call_function) {
+void ServerAsio::Listen(InputConnection::UserFunc user_call_function) {
   user_call_function_ = user_call_function;
   Accept();
   io_service_.run();
@@ -56,13 +59,25 @@ void ServerAsio::ClearInterval(TimeoutHandle interval_handle) {
   user_timers_.erase(timer);
 }
 
+void ServerAsio::MakeClientRequest(
+    ClientRequest&& client_request,
+    ClientRequestCallback client_request_callback) {
+  resolver_.async_resolve({client_request.authority(), "80"},
+                          std::bind(&ServerAsio::HandleResolve,
+                                    this,
+                                    std::move(client_request),
+                                    client_request_callback,
+                                    std::placeholders::_1,
+                                    std::placeholders::_2));
+}
+
 // private
 
 bool ServerAsio::Accept() {
-  HttpConnection::Pointer new_connection =
-      HttpConnection::Create(acceptor_.get_io_service(),
-                             user_call_function_,
-                             *this);
+  InputConnection::Pointer new_connection =
+      InputConnection::Create(acceptor_.get_io_service(),
+                              user_call_function_,
+                              *this);
 
   try {
     acceptor_.async_accept(
@@ -71,20 +86,18 @@ bool ServerAsio::Accept() {
                   this,
                   new_connection,
                   std::placeholders::_1));
-  } catch (boost::exception& e) {
-    LOG << "error accepting." << std::endl;
+  } catch (boost::exception&) {
     return false;
   }
   return true;
 }
 
-void ServerAsio::HandleAccept(HttpConnection::Pointer new_connection,
+void ServerAsio::HandleAccept(InputConnection::Pointer new_connection,
                               const boost::system::error_code& error) {
   Accept();
   if (error) {
     return;
   }
-  new_connection->set_user_function(user_call_function_);
   new_connection->Start();
 }
 
@@ -137,6 +150,20 @@ void ServerAsio::HandleInterval(std::chrono::milliseconds timeout,
                                        callback,
                                        std::placeholders::_1));
   }
+}
+
+void ServerAsio::HandleResolve(ClientRequest& client_request,
+                               ClientRequestCallback client_request_callback,
+                               const boost::system::error_code& error,
+                               Resolver::iterator iterator) {
+  if (error) {
+    return client_request_callback(std::move(client_request),
+                                   std::move(ClientResponse()));
+  }
+  OutputConnection::Run(acceptor_.get_io_service(),
+                        std::move(client_request),
+                        client_request_callback,
+                        iterator);
 }
 
 }  // namespace koohar

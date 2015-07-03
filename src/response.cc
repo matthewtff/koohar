@@ -6,6 +6,7 @@
 #include "base/filemapping.hh"
 #include "base/json.hh"
 #include "base/utils.hh"
+#include "http.hh"
 
 namespace {
 const char kContentTypeHeader[] = "Content-Type";
@@ -79,7 +80,7 @@ Response::StateMap Response::States = {
   {510, "510 Not Extended"},
 };
 
-Response::Response(HttpConnection::Pointer Connection)
+Response::Response(InputConnection::Pointer Connection)
     : headers_allowed_(true), connection_(Connection) {
 }
 
@@ -181,19 +182,16 @@ void Response::Transfer(const void* buffer, const off_t buffer_size) {
 }
 
 void Response::SendHeaders() {
-  static const char HeaderDelimiter[]{": "};
-  static const char LineDelimiter[]{"\r\n"};
-
   if (!headers_allowed_) {
     return;
   }
   for (const auto& header : headers_) {
     Transfer(header.first.c_str(), header.first.length());
-    TransferString(HeaderDelimiter);
+    TransferString(HTTP::kHeaderDelimiter);
     Transfer(header.second.c_str(), header.second.length());
-    TransferString(LineDelimiter);
+    TransferString(HTTP::kLineDelimiter);
   }
-  TransferString(LineDelimiter);
+  TransferString(HTTP::kLineDelimiter);
   headers_.clear();
   headers_allowed_ = false;
 }

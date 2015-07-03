@@ -43,6 +43,7 @@ bool UriParser::Parse(const std::string& uri) {
   const std::string::const_iterator end = decoded_uri.end();
   re::match_results<std::string::const_iterator> what;
   if (!re::regex_search(start, end, what, uri_regex, flags)) {
+    valid_ = false;
     return false;
   }
 
@@ -53,6 +54,7 @@ bool UriParser::Parse(const std::string& uri) {
   fragment_ = std::string(what[9].first, what[9].second);
 
   ParseQuery(query_);
+  valid_ = true;
   return true;
 }
 

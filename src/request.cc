@@ -8,6 +8,8 @@
 
 namespace koohar {
 
+Request::Request() : HttpParser(false) {}
+
 bool Request::Contains(const std::string& url) const {
   return uri().find(url) != std::string::npos;
 }

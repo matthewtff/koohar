@@ -6,7 +6,7 @@
 
 #include "base/file.hh"
 #include "base/utils.hh"
-#include "http_connection.hh"
+#include "input_connection.hh"
 
 namespace koohar {
 
@@ -27,7 +27,7 @@ class Response {
    */
   static StateMap States;
 
-  explicit Response(HttpConnection::Pointer Connection);
+  explicit Response(InputConnection::Pointer Connection);
   Response(Response&&) = default;
 
   Response& operator=(Response&&) = default;
@@ -113,7 +113,7 @@ class Response {
   StringMap headers_;
   bool headers_allowed_;  // Set to true, till any part of body is sent.
   
-  HttpConnection::Pointer connection_;
+  InputConnection::Pointer connection_;
 };  // class Response
 
 }  // namespace koohar

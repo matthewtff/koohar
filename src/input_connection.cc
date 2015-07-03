@@ -1,4 +1,4 @@
-#include "http_connection.hh"
+#include "input_connection.hh"
 
 #include <functional>
 #include <sstream>
@@ -16,23 +16,23 @@ const char kFaviconUrl[] = "/favicon.ico";
 
 namespace koohar {
 
-HttpConnection::Pointer HttpConnection::Create (
+InputConnection::Pointer InputConnection::Create (
     boost::asio::io_service& io_service,
     UserFunc user_call_function,
     const ServerConfig& config) {
-  return Pointer(new HttpConnection(io_service, user_call_function, config));
+  return Pointer(new InputConnection(io_service, user_call_function, config));
 }
 
-void HttpConnection::Start() {
+void InputConnection::Start() {
   socket_.async_read_some (
       boost::asio::buffer(request_buffer_, kMaxRequestSize),
-      std::bind(&HttpConnection::HandleRead,
+      std::bind(&InputConnection::HandleRead,
                 shared_from_this(),
                 std::placeholders::_1,
                 std::placeholders::_2));
 }
 
-void HttpConnection::Write(const char* data, std::size_t size) {
+void InputConnection::Write(const char* data, std::size_t size) {
   if (!data || !size) {
     return;
   }
@@ -43,40 +43,43 @@ void HttpConnection::Write(const char* data, std::size_t size) {
 
   buffers_.emplace_back(data, data + size);
 
-  boost::asio::async_write(
-      socket_,
-      boost::asio::buffer(*(buffers_.rbegin())),
-      std::bind(&HttpConnection::HandleWrite,
-                shared_from_this(),
-                std::placeholders::_1,
-                std::placeholders::_2));
-
-  ++writing_operations_;
+  Write();
 }
 
-void HttpConnection::Close() {
+void InputConnection::Close() {
   close_socket_ = true;
-  if (writing_operations_ == 0) {
+  if (buffers_.empty()) {
     socket_.close();
   }
 }
 
-HttpConnection::~HttpConnection() {
-}
-
 // private
 
-HttpConnection::HttpConnection(boost::asio::io_service& io_service,
+InputConnection::InputConnection(boost::asio::io_service& io_service,
                                UserFunc user_call_function,
                                const ServerConfig& config)
     : config_(config),
       socket_(io_service),
       user_call_function_(user_call_function),
-      writing_operations_(0),
+      currently_writing_(false),
       close_socket_(false) {
 }
 
-void HttpConnection::HandleRead(const boost::system::error_code& error,
+void InputConnection::Write() {
+  if (currently_writing_) {
+    return;
+  }
+  boost::asio::async_write(
+    socket_,
+    boost::asio::buffer(buffers_.front()),
+    std::bind(&InputConnection::HandleWrite,
+              shared_from_this(),
+              std::placeholders::_1,
+              std::placeholders::_2));
+  currently_writing_ = true;
+}
+
+void InputConnection::HandleRead(const boost::system::error_code& error,
                                 const std::size_t bytes_transferred) {
   if (error) {
     return;
@@ -108,16 +111,20 @@ void HttpConnection::HandleRead(const boost::system::error_code& error,
   }
 }
 
-void HttpConnection::HandleWrite(const boost::system::error_code& error,
+void InputConnection::HandleWrite(const boost::system::error_code& error,
                                  const std::size_t bytes_transferred) {
   if (!error && bytes_transferred == 0) {
     LOG << "HttpConnection[write_error] : transferred 0 bytes";
   }
 
-  if (writing_operations_ > 0) {
-    --writing_operations_;
+  currently_writing_ = false;
+  buffers_.pop_front();
+
+  if (!buffers_.empty()) {
+    Write();
   }
-  if (close_socket_ && writing_operations_ == 0) {
+
+  if (close_socket_ && buffers_.empty()) {
     socket_.close();
   }
 }

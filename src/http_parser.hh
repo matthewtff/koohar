@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 
+#include "http.hh"
 #include "uri_parser.hh"
 
 namespace koohar {
@@ -13,23 +14,7 @@ namespace koohar {
  */
 class HttpParser : public UriParser {
  public:
-  struct Version {
-    unsigned short int m_major;
-    unsigned short int m_minor;
-  };
-
-  enum class Method {
-    Options,
-    Get,
-    Head,
-    Post,
-    Put,
-    Delete,
-    Trace,
-    Connect,
-  };
-
-  HttpParser() = default;
+  HttpParser(const bool is_client);
   HttpParser(HttpParser&&) = default;
 
   HttpParser& operator=(HttpParser&&) = default;
@@ -53,15 +38,17 @@ class HttpParser : public UriParser {
     return cookies_[cookie_name];
   }
 
-  Method method() const { return method_; }
+  HTTP::Method method() const { return method_; }
   std::string uri() const { return uri_; }
-  Version version() const { return version_; }
+  HTTP::Version version() const { return version_; }
   std::string body() const { return body_; }
+  int status_code() const { return status_code_; }
 
  protected:
-  Method method_;
+  HTTP::Method method_;
   std::string uri_;
-  Version version_;
+  HTTP::Version version_;
+  int status_code_ = 0;
   StringMap headers_;
   std::string body_;
   StringMap cookies_;
@@ -71,6 +58,8 @@ class HttpParser : public UriParser {
     OnMethod,
     OnUri,
     OnHttpVersion,
+    OnStatusCode,
+    OnReasonPhrase,
     OnHeaderName,
     OnHeaderValue,
     OnBody,
@@ -81,13 +70,16 @@ class HttpParser : public UriParser {
   void ParseMethod (const char ch);
   void ParseUri (const char ch);
   void ParseHttpVersion (const char ch);
+  void ParseStatusCode (const char ch);
+  void ParseReasonPhrase (const char ch);
   void ParseHeaderName (const char ch);
   void ParseHeaderValue (const char ch);
   void ParseBody (const char ch);
 
   void ParseCookies (const std::string& CookieStr);
 
-  State state_ = State::OnMethod;
+  bool is_client_;
+  State state_;
   std::string token_;
   std::string current_header_;
 

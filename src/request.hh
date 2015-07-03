@@ -11,7 +11,7 @@ class Request : public HttpParser {
  public:
   static int error_code() { return 400; }
 
-  Request() = default;
+  Request();
   Request(Request&&) = default;
 
   Request& operator=(Request&&) = default;

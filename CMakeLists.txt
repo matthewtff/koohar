@@ -66,8 +66,12 @@ SET ( koohar_base
 
 SET ( koohar_src
   ${koohar_base}
-  src/http_connection.cc
+  src/client_response.cc
+  src/client_request.cc
+  src/http.cc
   src/http_parser.cc
+  src/input_connection.cc
+  src/output_connection.cc
   src/request.cc
   src/response.cc
   src/server_asio.cc
