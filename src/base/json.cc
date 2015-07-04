@@ -20,8 +20,7 @@ bool IsSeporator(const char ch) {
   if (std::isspace(ch)) {
     return true;
   }
-  const char* character = std::find(kSeporators, kSeporatorsEnd, ch);
-  return character != kSeporatorsEnd;
+  return std::find(kSeporators, kSeporatorsEnd, ch) != kSeporatorsEnd;
 }
 
 bool IsBoolean(const std::string &token) {
@@ -58,10 +57,21 @@ bool IsFloat(const std::string& token) {
 }
 
 bool IsString(const std::string& token) {
-  if (token.empty()) {
+  // Even an empty string is at least 2 symbols legnth: '""'.
+  if (token.length() < 2) {
     return false;
   }
   return token[0] == '"' && token[token.length() - 1] == '"';
+}
+
+bool IsOpenedString(const std::string& token) {
+  if (token.empty() || token[0] != '"') {
+    return false;
+  }
+  if (token.length() > 1) {
+    return token[token.length() - 1] != '"';
+  }
+  return true;
 }
 
 }  // anonymous namespace
@@ -277,10 +287,8 @@ std::string Object::CollectionToString() const {
 
 void Object::ParseValue(const std::string& stream, std::size_t& parsed) {
   const char ch = stream[parsed];
-  if (!IsSeporator(ch) || (!token_.empty() &&
-      token_[0] == '"' && token_[token_.length() - 1] != '"')) {
-    if (ch == '"' && !token_.empty() &&
-        token_[token_.length() - 1] == '\\') {
+  if (IsOpenedString(token_) || !IsSeporator(ch)) {
+    if (ch == '"' && !token_.empty() && token_[token_.length() - 1] == '\\') {
       token_.erase(token_.end() - 1);
     }
     token_.append(1, ch);

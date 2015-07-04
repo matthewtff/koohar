@@ -38,7 +38,8 @@ void InputConnection::Write(const char* data, std::size_t size) {
   }
 
   if (close_socket_) {
-    LOG << "HttpConnection[write_error]: Writing to socket after close";
+    LOG(kInfo) << "HttpConnection[write_error]: Writing to socket after close";
+    return;
   }
 
   buffers_.emplace_back(data, data + size);
@@ -107,16 +108,12 @@ void InputConnection::HandleRead(const boost::system::error_code& error,
     user_call_function_(std::move(request_), std::move(res));
   } else {
     // TODO(matthewtff): Implement default callback to close connections.
-    LOG << "HttpConnection[callback_error] : Callback was not set";
+    LOG(kInfo) << "HttpConnection[callback_error] : Callback was not set";
   }
 }
 
-void InputConnection::HandleWrite(const boost::system::error_code& error,
-                                 const std::size_t bytes_transferred) {
-  if (!error && bytes_transferred == 0) {
-    LOG << "HttpConnection[write_error] : transferred 0 bytes";
-  }
-
+void InputConnection::HandleWrite(const boost::system::error_code& /* error */,
+                                  const std::size_t /* bytes_transferred */) {
   currently_writing_ = false;
   buffers_.pop_front();
 

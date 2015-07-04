@@ -61,6 +61,14 @@ bool HttpParser::Update(const char* data, const unsigned int size) {
   return state_ != State::OnParseError;
 }
 
+bool HttpParser::Finish() {
+  if (!content_length_ && state_ == State::OnBody) {
+    state_ = State::OnComplete;
+    return true;
+  }
+  return false;
+}
+
 // private
 
 void HttpParser::ParseMethod(const char ch) {

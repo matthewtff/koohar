@@ -15,6 +15,7 @@ namespace koohar {
 class HttpParser : public UriParser {
  public:
   HttpParser(const bool is_client);
+  HttpParser(const HttpParser& other) = default;
   HttpParser(HttpParser&&) = default;
 
   HttpParser& operator=(HttpParser&&) = default;
@@ -27,6 +28,7 @@ class HttpParser : public UriParser {
    * @return false on parse error, true otherwise.
    */
   bool Update(const char* data, const unsigned int size);
+  bool Finish();
   bool IsBad() const { return state_ == State::OnParseError; }
   bool IsComplete() const { return state_ == State::OnComplete; }
 

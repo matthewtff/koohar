@@ -14,30 +14,24 @@ namespace koohar {
 typedef std::map<std::string, std::string> StringMap;
 
 template <typename T, size_t N>
-char (&ArraySizeHelper(const T (&array)[N]))[N];
-
-#define array_size(array) (sizeof(koohar::ArraySizeHelper(array)))
-
+constexpr size_t array_size(const T (&)[N]) {
+  return N;
+}
 
 // Length of string without terminating null character.
 template <size_t N>
-size_t string_length(const char (&)[N]) {
+constexpr size_t string_length(const char (&)[N]) {
   static_assert(N > 0, "String is not null terminated!");
   return N - 1;
 }
 
-#ifndef NDEBUG
+enum LogLevel {
+  kError,
+  kInfo,
+};
 
-#define LOG (std::cout)
-
-#else // NDEBUG
-
-class DummyOstream : public std::ostream {};
-#define LOG dummy;
-
-#endif // NDEBUG
-
-void NOTREACHED();
+std::ostream& LOG(const LogLevel level);
+std::ostream& NOTREACHED();
 
 } // namespace koohar
 

@@ -27,6 +27,7 @@ class UriParser {
   std::string path() const { return path_; }
   std::string query() const { return query_; }
   std::string fragment() const { return fragment_; }
+  std::string url() const { return url_; }
 
  protected:
   void ParseQuery(const std::string& query_string);
@@ -39,6 +40,7 @@ class UriParser {
   std::string path_;
   std::string query_;
   std::string fragment_;
+  std::string url_;
 };  // class UriParser
 
 }  // namespace koohar

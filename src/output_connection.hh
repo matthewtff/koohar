@@ -13,6 +13,8 @@
 
 namespace koohar {
 
+class ClientCache;
+
 class OutputConnection : public std::enable_shared_from_this<OutputConnection> {
  public:
   static const unsigned int kMaxResponseSize = 65536;  // 64KB
@@ -23,12 +25,14 @@ class OutputConnection : public std::enable_shared_from_this<OutputConnection> {
   static void Run(boost::asio::io_service& io_service,
                   ClientRequest&& request,
                   Callback callback,
-                  boost::asio::ip::tcp::resolver::iterator hosts);
+                  boost::asio::ip::tcp::resolver::iterator hosts,
+                  ClientCache* client_cache);
 
  private:
   OutputConnection(boost::asio::io_service& io_service,
                    ClientRequest&& request,
-                   Callback callback);
+                   Callback callback,
+                   ClientCache* client_cache);
   void Start(boost::asio::ip::tcp::resolver::iterator hosts);
   void Respond();
   void Write();
@@ -46,7 +50,9 @@ class OutputConnection : public std::enable_shared_from_this<OutputConnection> {
   char response_buffer_[kMaxResponseSize];
   ClientRequest request_;
   ClientResponse response_;
+  ClientResponse cached_response_;
   Callback callback_;
+  ClientCache* client_cache_;
 }; // class OutputConnection
 
 } // namespace koohar

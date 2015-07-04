@@ -9,11 +9,15 @@ namespace koohar {
 class ClientResponse {
  public:
   ClientResponse();
+  ClientResponse(const ClientResponse&) = default;
   ClientResponse(ClientResponse&&) = default;
+
+  ClientResponse& operator=(ClientResponse&&) = default;
 
   bool Update(const char* data, const unsigned int size) {
     return http_parser_.Update(data, size);
   }
+  bool Finish() { return http_parser_.Finish(); }
   bool Valid() const { return http_parser_.IsComplete(); }
 
   std::string Header(const std::string& header_name) {

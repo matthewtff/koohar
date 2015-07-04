@@ -66,6 +66,7 @@ SET ( koohar_base
 
 SET ( koohar_src
   ${koohar_base}
+  src/client_cache.cc
   src/client_response.cc
   src/client_request.cc
   src/http.cc

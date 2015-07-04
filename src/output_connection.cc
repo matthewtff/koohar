@@ -1,5 +1,7 @@
 #include "output_connection.hh"
 
+#include "client_cache.hh"
+
 namespace asio = boost::asio;
 
 using std::placeholders::_1;
@@ -10,9 +12,12 @@ namespace koohar {
 void OutputConnection::Run(asio::io_service& io_service,
                            ClientRequest&& request,
                            Callback callback,
-                           asio::ip::tcp::resolver::iterator hosts) {
-  Pointer connection(
-      new OutputConnection(io_service, std::move(request), callback));
+                           asio::ip::tcp::resolver::iterator hosts,
+                           ClientCache* client_cache) {
+  Pointer connection(new OutputConnection(io_service,
+                                          std::move(request),
+                                          callback,
+                                          client_cache));
   connection->Start(hosts);
 }
 
@@ -26,18 +31,26 @@ void OutputConnection::Start(asio::ip::tcp::resolver::iterator hosts) {
   }
 }
 
-OutputConnection::OutputConnection(
-    asio::io_service& io_service,
-    ClientRequest&& request,
-    Callback callback)
+OutputConnection::OutputConnection(asio::io_service& io_service,
+                                   ClientRequest&& request,
+                                   Callback callback,
+                                   ClientCache* client_cache)
     : socket_(io_service),
       bytes_sent_(0u),
       request_(std::move(request)),
-      callback_(callback) {
+      callback_(callback),
+      client_cache_(client_cache) {
 }
 
 void OutputConnection::Respond() {
   if (callback_) {
+    const bool should_use_cache =
+        !response_.Valid() || response_.status_code() == 304;
+    if (cached_response_.Valid() && should_use_cache) {
+      response_ = std::move(cached_response_);
+    } else if (response_.Valid() && response_.status_code() == 200) {
+      client_cache_->SetCacheEntry(request_, response_);
+    }
     callback_(std::move(request_), std::move(response_));
   }
   callback_ = nullptr;
@@ -63,6 +76,7 @@ void OutputConnection::HandleConnect(const boost::system::error_code& error,
   if (error) {
     return Respond();
   }
+  cached_response_ = client_cache_->PrepareRequest(request_);
   request_text_ = request_.AsString();
   Write();
   Read();
@@ -70,17 +84,15 @@ void OutputConnection::HandleConnect(const boost::system::error_code& error,
 
 void OutputConnection::HandleRead(const boost::system::error_code& error,
                                   const std::size_t bytes_transferred) {
-  if (!bytes_transferred ||
-      !response_.Update(response_buffer_, bytes_transferred)) {
-    if (error) {
-      LOG << "Error: " << error.message() << std::endl;
+  if (!response_.Update(response_buffer_, bytes_transferred) || error) {
+    if (error != asio::error::eof) {
+      LOG(kInfo) << "Error reading from output connection: " <<
+          error.message() << std::endl;
     }
+    response_.Finish();
     return Respond();
-  } else if (response_.Valid()) {
-    Respond();
-  } else {
-    Read();
   }
+  Read();
 }
 
 void OutputConnection::HandleWrite(const boost::system::error_code& error,

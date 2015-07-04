@@ -1,19 +1,20 @@
 #include "base/utils.hh"
 
-#ifdef NDEBUG
 #include <cassert>
-#include <iostream>
-#include <utility>
-#else // NDEBUG
 #include <ostream>
-#endif // NDEBUG
 
 namespace koohar {
 
-void NOTREACHED() {
-#ifdef NDEBUG
-  std::assert(false);
-#endif // NDEBUG
+std::ostream& LOG(const LogLevel level) {
+  switch (level) {
+    case kError: return std::cerr;
+    case kInfo: return std::cout;
+  }
+}
+
+std::ostream& NOTREACHED() {
+  assert(false);
+  return LOG(kError);
 }
 
 } // namespace koohar

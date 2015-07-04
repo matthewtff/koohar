@@ -8,6 +8,7 @@
 #include <boost/asio.hpp>
 #include <boost/asio/steady_timer.hpp>
 
+#include "client_cache.hh"
 #include "client_request.hh"
 #include "client_response.hh"
 #include "input_connection.hh"
@@ -70,6 +71,7 @@ class ServerAsio : public ServerConfig {
   boost::asio::io_service io_service_;
   boost::asio::ip::tcp::acceptor acceptor_;
   Resolver resolver_;
+  ClientCache client_cache_;
 
   InputConnection::UserFunc user_call_function_;
   TimersMap user_timers_;

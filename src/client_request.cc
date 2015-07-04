@@ -10,8 +10,7 @@ ClientRequest::ClientRequest(const std::string& url)
 ClientRequest::ClientRequest(const HTTP::Method method, const std::string& url)
     : method_(method), version_{1, 0} {
   if (!Parse(url)) {
-    LOG << "Invalid url requiested: " << url << std::endl;
-    NOTREACHED();
+    NOTREACHED() << "Invalid url requiested: " << url << std::endl;;
   }
 }
 
@@ -35,8 +34,8 @@ std::string ClientRequest::GetHeaderValue(
 
 std::string ClientRequest::AsString() const {
   if (!valid()) {
-    LOG << "Cannot get HTTP request string for invalid request" << std::endl;
-    NOTREACHED();
+    NOTREACHED() << "Cannot get HTTP request string for invalid request" <<
+        std::endl;
     return std::string();
   }
   std::ostringstream request_stream;

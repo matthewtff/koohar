@@ -160,10 +160,15 @@ void ServerAsio::HandleResolve(ClientRequest& client_request,
     return client_request_callback(std::move(client_request),
                                    std::move(ClientResponse()));
   }
+  // OutputConnection can outlive ServerAsio, so passing raw pointer to
+  // |client_cache_| is a bad idea. But such crash is possible on application
+  // termination, so don't care for now.
+  // TODO(matthewtff): Fix this.
   OutputConnection::Run(acceptor_.get_io_service(),
                         std::move(client_request),
                         client_request_callback,
-                        iterator);
+                        iterator,
+                        &client_cache_);
 }
 
 }  // namespace koohar

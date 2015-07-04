@@ -54,6 +54,7 @@ bool UriParser::Parse(const std::string& uri) {
   fragment_ = std::string(what[9].first, what[9].second);
 
   ParseQuery(query_);
+  url_ = uri;
   valid_ = true;
   return true;
 }
