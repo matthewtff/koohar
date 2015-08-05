@@ -10,6 +10,7 @@ std::ostream& LOG(const LogLevel level) {
     case kError: return std::cerr;
     case kInfo: return std::cout;
   }
+  return std::cout;
 }
 
 std::ostream& NOTREACHED() {

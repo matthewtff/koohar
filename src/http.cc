@@ -17,6 +17,7 @@ std::string MethodToString(const HTTP::Method method) {
     case HTTP::Method::Trace : return "TRACE";
     case HTTP::Method::Connect : return "CONNECT";
   }
+  return "GET";
 }
 
 std::string VersionToString(const HTTP::Version version) {

@@ -20,6 +20,7 @@ HTTP::Method operator++(HTTP::Method& method) {
     case Method::Trace: return method = Method::Connect;
     case Method::Connect: return method = Method::Options;
   }
+  return Method::Get;
 }
 
 HttpParser::HttpParser(const bool is_client) : is_client_(is_client) {
