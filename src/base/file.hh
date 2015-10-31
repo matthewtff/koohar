@@ -51,6 +51,9 @@ class File {
 
   static int Read(Handle handle, void* buffer, const size_t length);
   static int Write(Handle handle, const void* buffer, const size_t length);
+  static bool IsDirectory(const std::string& path) {
+    return IsDirectory(path.c_str());
+  }
   static bool IsDirectory(const char* path);
 
  private:

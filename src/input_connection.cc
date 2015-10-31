@@ -38,7 +38,8 @@ void InputConnection::Write(const char* data, std::size_t size) {
   }
 
   if (close_socket_) {
-    LOG(kInfo) << "HttpConnection[write_error]: Writing to socket after close";
+    LOG(LogLevel::kInfo)
+        << "HttpConnection[write_error]: Writing to socket after close";
     return;
   }
 
@@ -81,18 +82,15 @@ void InputConnection::Write() {
 }
 
 void InputConnection::HandleRead(const boost::system::error_code& error,
-                                const std::size_t bytes_transferred) {
-  if (error) {
+                                 const std::size_t bytes_transferred) {
+  if (error)
     return;
-  }
 
   Response res{shared_from_this()};
   res.Header("Server", "koohar");
 
   if (!request_.Update(request_buffer_, bytes_transferred)) {
-    res.WriteHead(request_.error_code());
-    res.End();
-    return;
+    return ReplyError(request_.error_code(), std::move(res));
   } else if (!request_.IsComplete()) {
     return Start();
   }
@@ -107,8 +105,9 @@ void InputConnection::HandleRead(const boost::system::error_code& error,
   } else if (user_call_function_) {
     user_call_function_(std::move(request_), std::move(res));
   } else {
-    // TODO(matthewtff): Implement default callback to close connections.
-    LOG(kInfo) << "HttpConnection[callback_error] : Callback was not set";
+    LOG(LogLevel::kInfo)
+        << "HttpConnection[callback_error] : Callback was not set";
+    ReplyError(500, std::move(res));
   }
 }
 
@@ -124,6 +123,12 @@ void InputConnection::HandleWrite(const boost::system::error_code& /* error */,
   if (close_socket_ && buffers_.empty()) {
     socket_.close();
   }
+}
+
+void InputConnection::ReplyError(const unsigned error_code, Response&& res) {
+  const std::string& error_page = config_.GetErrorPage(error_code);
+  error_page.empty() ? res.WriteHead(error_code) : res.Redirect(error_page);
+  res.End();
 }
 
 } // namespace koohar

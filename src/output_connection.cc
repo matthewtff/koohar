@@ -86,7 +86,7 @@ void OutputConnection::HandleRead(const boost::system::error_code& error,
                                   const std::size_t bytes_transferred) {
   if (!response_.Update(response_buffer_, bytes_transferred) || error) {
     if (error != asio::error::eof) {
-      LOG(kInfo) << "Error reading from output connection: " <<
+      LOG(LogLevel::kInfo) << "Error reading from output connection: " <<
           error.message() << std::endl;
     }
     response_.Finish();

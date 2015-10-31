@@ -7,15 +7,15 @@ namespace koohar {
 
 std::ostream& LOG(const LogLevel level) {
   switch (level) {
-    case kError: return std::cerr;
-    case kInfo: return std::cout;
+    case LogLevel::kError: return std::cerr;
+    case LogLevel::kInfo: return std::cout;
   }
   return std::cout;
 }
 
 std::ostream& NOTREACHED() {
   assert(false);
-  return LOG(kError);
+  return LOG(LogLevel::kError);
 }
 
 } // namespace koohar

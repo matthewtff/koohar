@@ -1,5 +1,7 @@
 #include "http.hh"
 
+#include "base/utils.hh"
+
 namespace koohar {
 namespace HTTP {
 
@@ -17,6 +19,7 @@ std::string MethodToString(const HTTP::Method method) {
     case HTTP::Method::Trace : return "TRACE";
     case HTTP::Method::Connect : return "CONNECT";
   }
+  NOTREACHED() << "We should be able to handle every HTTP method";
   return "GET";
 }
 

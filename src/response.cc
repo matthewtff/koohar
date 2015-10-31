@@ -85,11 +85,10 @@ Response::Response(InputConnection::Pointer Connection)
 }
 
 void Response::WriteHead(const unsigned short state) {
-  if (!headers_allowed_) {
+  if (!headers_allowed_)
     return;
-  }
   std::string head{"HTTP/1.1 "};
-  head += States[state] + "\r\n";
+  head += States[state] + HTTP::kLineDelimiter;
   Transfer(head.c_str(), head.length());
 }
 
@@ -111,9 +110,8 @@ void Response::Header(const std::string& header_name,
 bool Response::Cookie(const std::string& cookie_name,
                       const std::string& cookie_value) {
   const std::string cookie_str = cookie_name + "=" + cookie_value + "; Path=/;";
-  if (cookie_name.empty() || cookie_value.empty()) {
+  if (cookie_name.empty() || cookie_value.empty())
     return false;
-  }
   // Dont replace all cookies, just add one.
   Header(kSetCookieHeader, cookie_str, false);
   return true;
@@ -182,9 +180,8 @@ void Response::Transfer(const void* buffer, const off_t buffer_size) {
 }
 
 void Response::SendHeaders() {
-  if (!headers_allowed_) {
+  if (!headers_allowed_)
     return;
-  }
   for (const auto& header : headers_) {
     Transfer(header.first.c_str(), header.first.length());
     TransferString(HTTP::kHeaderDelimiter);

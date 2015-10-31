@@ -25,7 +25,7 @@ constexpr size_t string_length(const char (&)[N]) {
   return N - 1;
 }
 
-enum LogLevel {
+enum class LogLevel {
   kError,
   kInfo,
 };

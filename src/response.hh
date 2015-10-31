@@ -35,7 +35,7 @@ class Response {
   /**
    * Sets and sends appropriate http status to client.
    */
-  void WriteHead(const unsigned short State);
+  void WriteHead(const unsigned short state);
 
   /**
    * Sets header. Can be called multiple times. If Replace set to false, the

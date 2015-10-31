@@ -4,6 +4,13 @@
 
 namespace koohar {
 
+namespace {
+
+const char kEtagHeader[] = "etag";
+const char kIfNoneMatchHeader[] = "If-None-Match";
+
+}  // anonymous namespace
+
 void ClientCache::SetCacheEntry(const ClientRequest& request,
                                 const ClientResponse& response) {
   cache_map_.insert(std::make_pair(request.url(), response));
@@ -11,12 +18,11 @@ void ClientCache::SetCacheEntry(const ClientRequest& request,
 
 ClientResponse ClientCache::PrepareRequest(ClientRequest& request) {
   CacheMap::iterator cache_pair = cache_map_.find(request.url());
-  if (cache_pair == cache_map_.cend()) {
+  if (cache_pair == cache_map_.cend())
     return ClientResponse();
-  }
-  const std::string etag_value = cache_pair->second.Header("etag");
+  const std::string etag_value = cache_pair->second.Header(kEtagHeader);
   if (!etag_value.empty()) {
-    request.SetHeader("If-None-Match", etag_value);
+    request.SetHeader(kIfNoneMatchHeader, etag_value);
   }
   return cache_pair->second;
 }

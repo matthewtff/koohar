@@ -43,6 +43,7 @@ class InputConnection : public std::enable_shared_from_this<InputConnection> {
                   const std::size_t bytes_transferred);
   void HandleWrite(const boost::system::error_code& error,
                    const std::size_t bytes_transferred);
+  void ReplyError(const unsigned error_code, Response&& res);
 
   ServerConfig config_;
   boost::asio::ip::tcp::socket socket_;

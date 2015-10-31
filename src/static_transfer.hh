@@ -6,6 +6,7 @@
 #include "server_config.hh"
 
 namespace koohar {
+class File;
 
 class StaticTransfer {
  public:
@@ -14,20 +15,19 @@ class StaticTransfer {
                  const ServerConfig& config);
   void Serve();
 
-  static const StringMap& mime_type() { return mime_types_; }
+  static const StringMap& mime_types() { return mime_types_; }
 
  private:
   /**
-   * If size of static file large then this it partially.
+   * If size of static file larger, it should be sent partially.
    * TODO(matthew): Make this constant configurable.
    */
-  static const unsigned int kMaxStaticSize = 16777216; // 16 MB
+  static const long unsigned int kMaxStaticSize = 16777216;  // 16 MB
 
   static const StringMap mime_types_;
 
-  bool IsVulnerable(const std::string& FileName);
+  void SendAllFile(const File& file);
   void HandleError(const unsigned short Code);
-  std::string MimeFromName(const std::string& FileName);
 
   Request request_;
   Response response_;
